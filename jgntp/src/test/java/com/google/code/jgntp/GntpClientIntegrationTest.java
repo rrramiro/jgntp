@@ -43,6 +43,7 @@ public class GntpClientIntegrationTest {
 	@Test
 	@SuppressWarnings("unused")
 	public void test() throws Exception {
+                logger.info("Running GntpClientIntegrationTest");
 		GntpApplicationInfo info = Gntp.appInfo("Test").icon(getImage(APPLICATION_ICON)).build();
 		GntpNotificationInfo notif1 = Gntp.notificationInfo(info, "Notify 1").icon(getImage(RING_ICON)).build();
 		GntpNotificationInfo notif2 = Gntp.notificationInfo(info, "Notify 2").icon(getImage(SMS_ICON)).build();
@@ -51,7 +52,7 @@ public class GntpClientIntegrationTest {
 		GntpNotificationInfo notif5 = Gntp.notificationInfo(info, "Notify 5").icon(getImage(VOICEMAIL_ICON)).build();
 		GntpNotificationInfo notif6 = Gntp.notificationInfo(info, "Notify 6").icon(getImage(PING_ICON)).build();
 
-		GntpClient client = Gntp.client(info).listener(new GntpListener() {
+		GntpClient client = Gntp.client(info).forHost("localhost").forGrowl_1_3().listener(new GntpListener() {
 			@Override
 			public void onRegistrationSuccess() {
 				logger.info("Registered");

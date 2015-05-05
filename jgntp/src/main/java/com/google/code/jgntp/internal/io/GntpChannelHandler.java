@@ -76,11 +76,12 @@ public class GntpChannelHandler extends SimpleChannelUpstreamHandler {
 
 	protected void handleMessage(GntpMessageResponse message) {
 		Preconditions.checkState(message instanceof GntpOkMessage || message instanceof GntpCallbackMessage || message instanceof GntpErrorMessage);
-
+                logger.debug("handling message...");
 		if (gntpClient.isRegistered()) {
-			GntpNotification notification = (GntpNotification)gntpClient.getNotificationsSent().get(message.getInternalNotificationId());
+                        GntpNotification notification = (GntpNotification)gntpClient.getNotificationsSent().get(message.getInternalNotificationId());
 			if (notification != null) {
 				if (message instanceof GntpOkMessage) {
+                                        logger.debug("OK - message.");
 					try {
 						if (listener != null) {
 							listener.onNotificationSuccess(notification);
@@ -91,6 +92,7 @@ public class GntpChannelHandler extends SimpleChannelUpstreamHandler {
 						}
 					}
 				} else if (message instanceof GntpCallbackMessage) {
+					logger.debug("Callback - message.");
 					gntpClient.getNotificationsSent().remove(message.getInternalNotificationId());
 					if (listener == null) {
 						throw new IllegalStateException("A GntpListener must be set in GntpClient to be able to receive callbacks");
@@ -110,6 +112,7 @@ public class GntpChannelHandler extends SimpleChannelUpstreamHandler {
 							throw new IllegalStateException("Unknown callback result: " + callbackMessage.getCallbackResult());
 					}
 				} else if (message instanceof GntpErrorMessage) {
+					logger.debug("ERROR - message.");
 					GntpErrorMessage errorMessage = (GntpErrorMessage) message;
 					if (listener != null) {
 						listener.onNotificationError(notification, errorMessage.getStatus(), errorMessage.getDescription());
@@ -118,10 +121,15 @@ public class GntpChannelHandler extends SimpleChannelUpstreamHandler {
 						GntpErrorStatus.UNKNOWN_NOTIFICATION == errorMessage.getStatus()) {
 						gntpClient.retryRegistration();
 					}
-				}
-			}
+				} else {
+                                        logger.warn("Unknown message type. [{}]", message);
+                                }
+			} else {
+                            logger.debug("notification is null. Not much we can do now...");
+                        }
 		} else {
-			if (message instanceof GntpOkMessage) {
+			logger.debug("application not registered. Not much we can do.");
+                        if (message instanceof GntpOkMessage) {
 				try {
 					if (listener != null) {
 						listener.onRegistrationSuccess();

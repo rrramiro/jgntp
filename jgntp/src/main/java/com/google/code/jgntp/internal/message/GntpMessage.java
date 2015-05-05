@@ -44,6 +44,7 @@ public abstract class GntpMessage {
 	public static final Charset ENCODING = Charsets.UTF_8;
 	public static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
 	public static final String DATE_TIME_FORMAT_ALTERNATE = "yyyy-MM-dd HH:mm:ss'Z'";
+        public static final String DATE_TIME_FORMAT_GROWL_1_3 = "yyyy-MM-dd";
 	public static final String IMAGE_FORMAT = "png";
 
 	public static final String BINARY_SECTION_ID = "Identifier:";

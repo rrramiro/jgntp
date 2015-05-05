@@ -46,7 +46,8 @@ public enum GntpMessageHeader {
 	NOTIFICATION_INTERNAL_ID {
 		@Override
 		public String toString() {
-			return "Data-Internal-Notification-ID";
+                        // Growl 1.3.1 on OS X Lion doesn't return "Data-..." headers, but "X-..." headers.
+			return "X-Data-Internal-Notification-ID";
 		}
 	},
 

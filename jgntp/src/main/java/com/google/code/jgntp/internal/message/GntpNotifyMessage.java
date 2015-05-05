@@ -52,7 +52,11 @@ public class GntpNotifyMessage extends GntpMessage {
 		if (notification.getId() != null) {
 			appendHeader(GntpMessageHeader.NOTIFICATION_ID, notification.getId(), writer);
 			appendSeparator(writer);
-		}
+		} else {
+                        // Growl 1.3.1 doesn't return the DATA- headers in the response so ensure the id is in there
+                        appendHeader(GntpMessageHeader.NOTIFICATION_ID, notificationId, writer);
+			appendSeparator(writer);
+                }
 
 		if (notification.getText() != null) {
 			appendHeader(GntpMessageHeader.NOTIFICATION_TEXT, notification.getText(), writer);

@@ -82,7 +82,11 @@ public class GntpMessageResponseParser {
 			try {
 				timestamp = new SimpleDateFormat(GntpMessage.DATE_TIME_FORMAT_ALTERNATE).parse(timestampText);
 			} catch (ParseException e1) {
-				throw new RuntimeException(e);
+				try {
+                                        timestamp = new SimpleDateFormat(GntpMessage.DATE_TIME_FORMAT_GROWL_1_3).parse(timestampText);
+                                } catch (ParseException e2) {
+                                        throw new RuntimeException(e);
+                                }
 			}
 		}
 

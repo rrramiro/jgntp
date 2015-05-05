@@ -21,6 +21,8 @@ import java.util.concurrent.*;
 import com.google.code.jgntp.internal.*;
 import com.google.code.jgntp.internal.io.*;
 import com.google.common.base.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("hiding")
 public class Gntp {
@@ -48,7 +50,9 @@ public class Gntp {
 	private long retryTime;
 	private TimeUnit retryTimeUnit;
 	private int notificationRetryCount;
+        private boolean isCustomPort = false;
 
+        private static Logger logger = LoggerFactory.getLogger(Gntp.class);
 	private Gntp(GntpApplicationInfo applicationInfo) {
 		Preconditions.checkNotNull(applicationInfo, "Application info must not be null");
 		this.applicationInfo = applicationInfo;
@@ -78,6 +82,15 @@ public class Gntp {
 	public static Gntp client(GntpApplicationInfo applicationInfo) {
 		return new Gntp(applicationInfo);
 	}
+        
+        public Gntp forGrowl_1_3() {
+                if(!isCustomPort){
+                        growlPort = WINDOWS_TCP_PORT;
+                } else {
+                    logger.debug("A custom port was used. Can't switch to windows port in case this is running on a mac. This might fail.");
+                }
+		return this;
+	}
 
 	public Gntp forAddress(SocketAddress address) {
 		growlAddress = address;
@@ -91,6 +104,7 @@ public class Gntp {
 	}
 
 	public Gntp onPort(int port) {
+                isCustomPort = true;
 		Preconditions.checkArgument(port > 0, "Port must not be negative");
 		growlPort = port;
 		return this;
@@ -184,9 +198,12 @@ public class Gntp {
 		String osName = System.getProperty("os.name");
 		if (osName != null) {
 			osName = osName.toLowerCase();
-			if (osName.contains("mac")) {
+                        if (osName.contains("mac")) {
+                                logger.debug("using mac port number: "+MAC_TCP_PORT);
 				return MAC_TCP_PORT;
-			}
+			} else {
+                                logger.debug("using the windows port for growl");
+                        }
 		}
 		return WINDOWS_TCP_PORT;
 	}

@@ -71,7 +71,9 @@ public abstract class NioGntpClient implements GntpClient {
 
 	@Override
 	public boolean isRegistered() {
-		return registrationLatch.getCount() == 0 && !isShutdown();
+                boolean isRegistered = registrationLatch.getCount() == 0 && !isShutdown();
+                logger.debug("checking if the [{}] application is registered. Registered = {}", applicationInfo,isRegistered);
+		return isRegistered;
 	}
 
 	@Override
