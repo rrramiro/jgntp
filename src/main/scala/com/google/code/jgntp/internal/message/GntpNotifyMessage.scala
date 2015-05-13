@@ -26,7 +26,7 @@ class GntpNotifyMessage(notification: GntpNotification, notificationId: Long, pa
       appendSeparator(writer)
     }
     else {
-      appendHeader(GntpMessageHeader.NOTIFICATION_ID, notificationId.asInstanceOf[Number], writer)
+      appendHeader(GntpMessageHeader.NOTIFICATION_ID, notificationId, writer)
       appendSeparator(writer)
     }
     if (notification.text.isDefined) {
@@ -38,7 +38,7 @@ class GntpNotifyMessage(notification: GntpNotification, notificationId: Long, pa
       appendSeparator(writer)
     }
     if (notification.priority.isDefined) {
-      appendHeader(GntpMessageHeader.NOTIFICATION_PRIORITY, notification.priority.get.getCode.asInstanceOf[Number], writer)
+      appendHeader(GntpMessageHeader.NOTIFICATION_PRIORITY, notification.priority.get.getCode, writer)
       appendSeparator(writer)
     }
     if (appendIcon(GntpMessageHeader.NOTIFICATION_ICON, notification.icon, writer)) {
@@ -52,19 +52,19 @@ class GntpNotifyMessage(notification: GntpNotification, notificationId: Long, pa
       case Some(callbackTarget) =>
         appendHeader(GntpMessageHeader.NOTIFICATION_CALLBACK_TARGET, callbackTarget, writer)
       case None =>
-        appendHeader(GntpMessageHeader.NOTIFICATION_CALLBACK_CONTEXT, notificationId.asInstanceOf[Number], writer)
+        appendHeader(GntpMessageHeader.NOTIFICATION_CALLBACK_CONTEXT, notificationId, writer)
         appendSeparator(writer)
         appendHeader(GntpMessageHeader.NOTIFICATION_CALLBACK_CONTEXT_TYPE, "int", writer)
     }
     appendSeparator(writer)
-    appendHeader(GntpMessageHeader.NOTIFICATION_INTERNAL_ID, notificationId.asInstanceOf[Number], writer)
+    appendHeader(GntpMessageHeader.NOTIFICATION_INTERNAL_ID, notificationId, writer)
     appendSeparator(writer)
     import scala.collection.JavaConversions._
     for (customHeader <- notification.headers.entrySet) {
       appendHeader(customHeader.getKey, customHeader.getValue, writer)
       appendSeparator(writer)
     }
-    if (!getBinarySections.isEmpty) {
+    if (binarySections.nonEmpty) {
       appendSeparator(writer)
     }
     writer.finishHeaders

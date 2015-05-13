@@ -16,16 +16,16 @@ package object message {
   case class HeaderBoolean(value: Boolean) extends HeaderValue
   case class HeaderDate(value: Date) extends HeaderValue
   case class HeaderUri(value: URI) extends HeaderValue
-  case class HeaderGtpnId(value: GntpId) extends HeaderValue
   case class HeaderInputStream(value: InputStream) extends HeaderValue
   case class HeaderArrayBytes(value: Array[Byte]) extends HeaderValue
 
   implicit def toHeaderString(field: String): HeaderValue = HeaderString(field)
   implicit def toHeaderNumber(field: Number): HeaderValue = HeaderNumber(field)
+  implicit def toHeaderLong(field: Long): HeaderValue = HeaderNumber(field)
+  implicit def toHeaderInt(field: Int): HeaderValue = HeaderNumber(field)
   implicit def toHeaderBoolean(field: Boolean): HeaderValue = HeaderBoolean(field)
   implicit def toHeaderDate(field: Date): HeaderValue = HeaderDate(field)
   implicit def toHeaderUri(field: URI): HeaderValue = HeaderUri(field)
-  implicit def toHeaderGtpnId(field: GntpId): HeaderValue = HeaderGtpnId(field)
   implicit def toHeaderInputStream(field: InputStream): HeaderValue = HeaderInputStream(field)
   implicit def toHeaderArrayBytes(field: Array[Byte]): HeaderValue = HeaderArrayBytes(field)
 

@@ -28,11 +28,11 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
                        retryTimeUnit: TimeUnit,
                        notificationRetryCount: Int = 0) extends NioGntpClient(applicationInfo, growlAddress, password, encrypted) {
 
-  Preconditions.checkNotNull(executor, "Executor must not be null".asInstanceOf[AnyRef])
+  assert(executor != null, "Executor must not be null")
   if (retryTime > 0) {
-    Preconditions.checkNotNull(retryTimeUnit, "Retry time unit must not be null".asInstanceOf[AnyRef])
+    assert(retryTimeUnit != null, "Retry time unit must not be null")
   }
-  Preconditions.checkArgument(notificationRetryCount >= 0, "Notification retries must be equal or greater than zero".asInstanceOf[AnyRef])
+  assert(notificationRetryCount >= 0, "Notification retries must be equal or greater than zero")
 
   private final val bootstrap: ClientBootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(executor, executor))
   bootstrap.setPipelineFactory(new GntpChannelPipelineFactory(new GntpChannelHandler(this, listener)))

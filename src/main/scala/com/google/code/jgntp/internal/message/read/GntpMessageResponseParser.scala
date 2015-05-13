@@ -17,10 +17,10 @@ class GntpMessageResponseParser {
 
   def parse(s: String): GntpMessageResponse = {
     val splitted: Iterable[String] = separatorSplitter.split(s)
-    Preconditions.checkState(!Iterables.isEmpty(splitted), "Empty message received from Growl".asInstanceOf[AnyRef])
+    assert(!Iterables.isEmpty(splitted), "Empty message received from Growl")
     val iter: java.util.Iterator[String] = splitted.iterator
     val statusLine: String = iter.next
-    Preconditions.checkState(statusLine.startsWith(GntpMessage.PROTOCOL_ID + "/" + GntpVersion.ONE_DOT_ZERO), "Unknown protocol version".asInstanceOf[AnyRef])
+    assert(statusLine.startsWith(GntpMessage.PROTOCOL_ID + "/" + GntpVersion.ONE_DOT_ZERO), "Unknown protocol version")
     val statusLineIterable: Iterable[String] = statusLineSplitter.split(statusLine)
     val messageTypeText: String = Iterables.get(statusLineIterable, 1).substring(1)
     val messageType: GntpMessageType = GntpMessageType.values.find( (msg : GntpMessageType) => msg.toString == messageTypeText).orNull

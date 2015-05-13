@@ -15,7 +15,7 @@ object NioUdpGntpClient {
 }
 
 class NioUdpGntpClient(applicationInfo: GntpApplicationInfo, growlAddress: SocketAddress, executor: Executor, password: GntpPassword, encrypted: Boolean) extends NioGntpClient(applicationInfo, growlAddress, password, encrypted) {
-  Preconditions.checkNotNull(executor, "Executor must not be null".asInstanceOf[AnyRef])
+  assert(executor != null, "Executor must not be null")
   private final val bootstrap: ConnectionlessBootstrap = new ConnectionlessBootstrap(new OioDatagramChannelFactory(executor))
   bootstrap.setPipelineFactory(new GntpChannelPipelineFactory(new GntpChannelHandler(this, null)))
   bootstrap.setOption("broadcast", "false")

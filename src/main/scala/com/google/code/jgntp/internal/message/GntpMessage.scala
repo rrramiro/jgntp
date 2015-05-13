@@ -15,7 +15,9 @@ import com.google.common.base._
 import com.google.common.collect._
 import com.google.common.io._
 import com.google.code.jgntp.internal.GntpMessageType._
+import scala.collection.mutable.ListBuffer
 import scala.language.implicitConversions
+import scala.collection.JavaConversions._
 
 object GntpMessage {
   val PROTOCOL_ID: String = "GNTP"
@@ -30,19 +32,12 @@ object GntpMessage {
   val IMAGE_FORMAT: String = "png"
   val BINARY_SECTION_ID: String = "Identifier:"
   val BINARY_SECTION_LENGTH: String = "Length:"
-
-
-
 }
 
-
-
 abstract class GntpMessage(`type`: GntpMessageType, password: GntpPassword, encrypt: Boolean) {
-  private final val headers: java.util.Map[String, String] = Maps.newHashMap[String, String]
-  private final val binarySections: java.util.List[BinarySection] = Lists.newArrayList[BinarySection]
+  var binarySections = new ListBuffer[BinarySection]
   private final val dateFormat: DateFormat =  new SimpleDateFormat(GntpMessage.DATE_TIME_FORMAT)
   private final val buffer: StringBuilder = new StringBuilder
-
 
   @throws(classOf[IOException])
   def append(output: OutputStream)
@@ -51,9 +46,6 @@ abstract class GntpMessage(`type`: GntpMessageType, password: GntpPassword, encr
   def appendStatusLine(writer: GntpMessageWriter) {
     writer.writeStatusLine(`type`)
   }
-
-
-
 
   @throws(classOf[IOException])
   def appendHeader(name: String, valueInternal: HeaderValue, writer: GntpMessageWriter) {
@@ -64,8 +56,6 @@ abstract class GntpMessage(`type`: GntpMessageType, password: GntpPassword, encr
         buffer.append(value.toString)
       case HeaderUri(value) =>
         buffer.append(value.toString)
-      case HeaderGtpnId(value) =>
-        buffer.append(value.toString)
       case HeaderString(value) =>
         buffer.append(value.replaceAll("\r\n", "\n"))
       case HeaderBoolean(value) =>
@@ -73,9 +63,9 @@ abstract class GntpMessage(`type`: GntpMessageType, password: GntpPassword, encr
       case HeaderDate(value) =>
         buffer.append(dateFormat.format(value))
       case HeaderInputStream(value) =>
-        buffer.append(addBinary(ByteStreams.toByteArray(value)).toString)
+        buffer.append(addBinary(ByteStreams.toByteArray(value)))
       case HeaderArrayBytes(value) =>
-        buffer.append(addBinary(value).toString)
+        buffer.append(addBinary(value))
       case _ =>
         throw new IllegalArgumentException("Value of header [" + name + "] not supported: " + valueInternal)
     }
@@ -107,23 +97,21 @@ abstract class GntpMessage(`type`: GntpMessageType, password: GntpPassword, encr
   }
 
   @throws(classOf[IOException])
-  def addBinary(data: Array[Byte]): GntpId = {
+  def addBinary(data: Array[Byte]): String = {
     val binarySection: BinarySection = new BinarySection(data)
-    binarySections.add(binarySection)
-    return GntpId.of(binarySection.id)
+    binarySections += binarySection
+    binarySection.gntpId
   }
 
   @throws(classOf[IOException])
   def appendBinarySections(writer: GntpMessageWriter) {
-    {
-      val iter: Iterator[BinarySection] = binarySections.iterator
-      while (iter.hasNext) {
-        val binarySection: BinarySection = iter.next
-        writer.writeBinarySection(binarySection)
-        if (iter.hasNext) {
-          appendSeparator(writer)
-          appendSeparator(writer)
-        }
+    val iter: Iterator[BinarySection] = binarySections.iterator
+    while (iter.hasNext) {
+      val binarySection: BinarySection = iter.next
+      writer.writeBinarySection(binarySection)
+      if (iter.hasNext) {
+        appendSeparator(writer)
+        appendSeparator(writer)
       }
     }
   }
@@ -134,19 +122,7 @@ abstract class GntpMessage(`type`: GntpMessageType, password: GntpPassword, encr
   }
 
   def clearBinarySections {
-    binarySections.clear
-  }
-
-  def putHeaders(map: Map[String, String]) {
-    headers.putAll(map)
-  }
-
-  def getHeaders: Map[String, String] = {
-    ImmutableMap.copyOf(headers)
-  }
-
-  def getBinarySections: List[BinarySection] = {
-    ImmutableList.copyOf(binarySections: java.lang.Iterable[BinarySection])
+    binarySections = new ListBuffer
   }
 
   protected def getWriter(output: OutputStream): GntpMessageWriter = {
@@ -158,6 +134,6 @@ abstract class GntpMessage(`type`: GntpMessageType, password: GntpPassword, encr
       messageWriter = new ClearTextGntpMessageWriter
     }
     messageWriter.prepare(output, password)
-    return messageWriter
+    messageWriter
   }
 }

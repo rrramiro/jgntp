@@ -7,6 +7,7 @@ import java.net.URI
 import com.google.code.jgntp.internal.Priority
 import java.security._
 import com.google.code.jgntp.internal.message.HeaderValue
+import com.google.code.jgntp.util.Hex
 import com.google.common.base.Charsets
 
 case class GntpApplicationInfo(name: String,
@@ -28,7 +29,7 @@ case class GntpNotification(applicationName: String,
                             id: Option[String] = None,
                             sticky: Option[Boolean] = None,
                             priority: Option[Priority] = None,
-                            context: Option[AnyRef] = None,
+                            context: Option[AnyRef] = None, //TODO remove
                             coalescingId: Option[String] = None)
 
 
@@ -43,9 +44,10 @@ object GntpPassword {
 case class GntpPassword(textPassword: String,
                         hashAlgorithm: String = GntpPassword.DEFAULT_KEY_HASH_ALGORITHM,
                         randomSaltAlgorithm: String = GntpPassword.DEFAULT_RANDOM_SALT_ALGORITHM) {
-  val salt: Seq[Byte]  = getSalt
-  val key: Seq[Byte] = hash(textPassword.getBytes(Charsets.UTF_8).toSeq ++ salt)
-  val keyHash: Seq[Byte] = hash(key)
+  private val _salt: Seq[Byte] = getSalt
+  val salt: String = Hex.toHexadecimal(_salt.toArray)
+  val key: Seq[Byte] = hash(textPassword.getBytes(Charsets.UTF_8).toSeq ++ _salt)
+  val keyHash: String = Hex.toHexadecimal(hash(key).toArray)
   val keyHashAlgorithm: String = hashAlgorithm.replaceAll("-", "")
 
   protected def getSeed: Long = System.currentTimeMillis()

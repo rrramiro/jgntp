@@ -19,7 +19,7 @@ class GntpRegisterMessage(applicationInfo: GntpApplicationInfo, password: GntpPa
     if (appendIcon(GntpMessageHeader.APPLICATION_ICON, applicationInfo.icon, writer)) {
       appendSeparator(writer)
     }
-    appendHeader(GntpMessageHeader.NOTIFICATION_COUNT, applicationInfo.notificationInfos.size.asInstanceOf[Number], writer)
+    appendHeader(GntpMessageHeader.NOTIFICATION_COUNT, applicationInfo.notificationInfos.size, writer)
     appendSeparator(writer)
     appendSeparator(writer)
     for (notificationInfo <- applicationInfo.notificationInfos) {

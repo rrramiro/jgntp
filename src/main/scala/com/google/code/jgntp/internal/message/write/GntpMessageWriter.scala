@@ -26,8 +26,8 @@ abstract class GntpMessageWriter {
     writeEncryptionSpec
     if (password != null) {
       writer.append(' ').append(password.keyHashAlgorithm)
-      writer.append(':').append(Hex.toHexadecimal(password.keyHash.toArray))
-      writer.append('.').append(Hex.toHexadecimal(password.salt.toArray))
+      writer.append(':').append(password.keyHash)
+      writer.append('.').append(password.salt)
     }
   }
 

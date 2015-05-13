@@ -12,10 +12,10 @@ object NioGntpClient {
 }
 
 abstract class NioGntpClient(applicationInfo: GntpApplicationInfo, growlAddress: SocketAddress, password: GntpPassword, encrypted: Boolean) extends GntpClient {
-  Preconditions.checkNotNull(applicationInfo, "Application info must not be null".asInstanceOf[AnyRef])
-  Preconditions.checkNotNull(growlAddress, "Address must not be null".asInstanceOf[AnyRef])
+  assert(applicationInfo != null, "Application info must not be null")
+  assert(growlAddress != null, "Address must not be null")
   if (encrypted) {
-    Preconditions.checkNotNull(password, "Password must not be null if sending encrypted messages".asInstanceOf[AnyRef])
+    assert(password != null, "Password must not be null if sending encrypted messages")
   }
 
   private final val registrationLatch: CountDownLatch = new CountDownLatch(1)
