@@ -95,14 +95,12 @@ case class GntpMessageHeader(name: String){
   GntpMessageHeader.values += this
   override def toString: String = name
 
-  def getPredicate: Predicate[String] = new Predicate[String] {
-    def apply(input: String): Boolean = {
-      GntpMessageHeader.this.toString == input
-    }
-  }
-
   def getValueInMap(map: java.util.Map[String, String]): String = {
-    val filteredMap: java.util.Map[String, String] = Maps.filterKeys(map, getPredicate)
+    val filteredMap: java.util.Map[String, String] = Maps.filterKeys(map, new Predicate[String] {
+      def apply(input: String): Boolean = {
+        name == input
+      }
+    })
     if (filteredMap.isEmpty) {
       return null
     }

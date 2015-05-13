@@ -4,8 +4,6 @@ import java.io._
 import com.google.code.jgntp._
 import com.google.code.jgntp.internal.GntpMessageHeader
 import com.google.code.jgntp.internal.message.write._
-import com.google.code.jgntp.internal.GntpMessageType._
-import com.google.code.jgntp.internal.GntpMessageType._
 import com.google.code.jgntp.internal.GntpMessageType
 
 class GntpRegisterMessage(applicationInfo: GntpApplicationInfo, password: GntpPassword, encrypt: Boolean) extends GntpMessage(GntpMessageType.REGISTER, password, encrypt) {
@@ -21,10 +19,9 @@ class GntpRegisterMessage(applicationInfo: GntpApplicationInfo, password: GntpPa
     if (appendIcon(GntpMessageHeader.APPLICATION_ICON, applicationInfo.icon, writer)) {
       appendSeparator(writer)
     }
-    appendHeader(GntpMessageHeader.NOTIFICATION_COUNT, applicationInfo.notificationInfos.size.asInstanceOf[AnyRef], writer)
+    appendHeader(GntpMessageHeader.NOTIFICATION_COUNT, applicationInfo.notificationInfos.size.asInstanceOf[Number], writer)
     appendSeparator(writer)
     appendSeparator(writer)
-    import scala.collection.JavaConversions._
     for (notificationInfo <- applicationInfo.notificationInfos) {
       appendHeader(GntpMessageHeader.NOTIFICATION_NAME, notificationInfo.name, writer)
       appendSeparator(writer)
@@ -35,7 +32,7 @@ class GntpRegisterMessage(applicationInfo: GntpApplicationInfo, password: GntpPa
       if (appendIcon(GntpMessageHeader.NOTIFICATION_ICON, notificationInfo.icon, writer)) {
         appendSeparator(writer)
       }
-      appendHeader(GntpMessageHeader.NOTIFICATION_ENABLED, notificationInfo.enabled.asInstanceOf[AnyRef], writer)
+      appendHeader(GntpMessageHeader.NOTIFICATION_ENABLED, notificationInfo.enabled, writer)
       appendSeparator(writer)
       appendSeparator(writer)
     }

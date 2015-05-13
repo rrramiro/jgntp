@@ -6,6 +6,7 @@ import java.net.URI
 
 import com.google.code.jgntp.internal.Priority
 import java.security._
+import com.google.code.jgntp.internal.message.HeaderValue
 import com.google.common.base.Charsets
 
 case class GntpApplicationInfo(name: String,
@@ -22,7 +23,7 @@ case class GntpNotification(applicationName: String,
                             title: String,
                             text: Option[String],
                             callbackTarget: Option[URI] = None,
-                            headers: Map[String, AnyRef],
+                            headers: Map[String, HeaderValue],
                             icon: Option[Either[URI, RenderedImage]] = None,
                             id: Option[String] = None,
                             sticky: Option[Boolean] = None,

@@ -5,6 +5,7 @@ import java.io._
 import java.net._
 import javax.imageio._
 import com.google.code.jgntp.internal._
+import com.google.code.jgntp.internal.message._
 import org.junit._
 import org.slf4j._
 import com.google.common.io._

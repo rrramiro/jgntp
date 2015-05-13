@@ -2,6 +2,7 @@ package com.google.code.jgntp.internal.message
 
 import java.awt.image._
 import java.io._
+import java.lang.String
 import java.net._
 import java.nio.charset._
 import java.text._
@@ -14,7 +15,7 @@ import com.google.common.base._
 import com.google.common.collect._
 import com.google.common.io._
 import com.google.code.jgntp.internal.GntpMessageType._
-
+import scala.language.implicitConversions
 
 object GntpMessage {
   val PROTOCOL_ID: String = "GNTP"
@@ -51,54 +52,40 @@ abstract class GntpMessage(`type`: GntpMessageType, password: GntpPassword, encr
     writer.writeStatusLine(`type`)
   }
 
-  @throws(classOf[IOException])
-  def appendHeader(header: GntpMessageHeader, value: AnyRef, writer: GntpMessageWriter) {
-    appendHeader(header.toString, value, writer)
-  }
+
+
 
   @throws(classOf[IOException])
-  def appendHeader(name: String, value: AnyRef, writer: GntpMessageWriter) {
+  def appendHeader(name: String, valueInternal: HeaderValue, writer: GntpMessageWriter) {
     buffer.append(name).append(GntpMessage.HEADER_SEPARATOR).append(' ')
-    if (value != null) {
-      if (value.isInstanceOf[String]) {
-        var s: String = value.asInstanceOf[String]
-        s = s.replaceAll("\r\n", "\n")
-        buffer.append(s)
-      }
-      else if (value.isInstanceOf[Number]) {
-        buffer.append((value.asInstanceOf[Number]).toString)
-      }
-      else if (value.isInstanceOf[Boolean]) {
-        var s: String = (value.asInstanceOf[Boolean]).toString
-        s = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, s)
-        buffer.append(s)
-      }
-      else if (value.isInstanceOf[Date]) {
-        val s: String = dateFormat.format(value.asInstanceOf[Date])
-        buffer.append(s)
-      }
-      else if (value.isInstanceOf[URI]) {
-        buffer.append((value.asInstanceOf[URI]).toString)
-      }
-      else if (value.isInstanceOf[GntpId]) {
+
+    valueInternal match {
+      case HeaderNumber(value) =>
         buffer.append(value.toString)
-      }
-      else if (value.isInstanceOf[InputStream]) {
-        val data: Array[Byte] = ByteStreams.toByteArray(value.asInstanceOf[InputStream])
-        val id: GntpId = addBinary(data)
-        buffer.append(id.toString)
-      }
-      else if (value.isInstanceOf[Array[Byte]]) {
-        val data: Array[Byte] = value.asInstanceOf[Array[Byte]]
-        val id: GntpId = addBinary(data)
-        buffer.append(id.toString)
-      }
-      else {
-        throw new IllegalArgumentException("Value of header [" + name + "] not supported: " + value)
-      }
+      case HeaderUri(value) =>
+        buffer.append(value.toString)
+      case HeaderGtpnId(value) =>
+        buffer.append(value.toString)
+      case HeaderString(value) =>
+        buffer.append(value.replaceAll("\r\n", "\n"))
+      case HeaderBoolean(value) =>
+        buffer.append(CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, value.toString))
+      case HeaderDate(value) =>
+        buffer.append(dateFormat.format(value))
+      case HeaderInputStream(value) =>
+        buffer.append(addBinary(ByteStreams.toByteArray(value)).toString)
+      case HeaderArrayBytes(value) =>
+        buffer.append(addBinary(value).toString)
+      case _ =>
+        throw new IllegalArgumentException("Value of header [" + name + "] not supported: " + valueInternal)
     }
     writer.writeHeaderLine(buffer.toString)
     buffer.setLength(0)
+  }
+
+  @throws(classOf[IOException])
+  def appendHeader(header: GntpMessageHeader, value: HeaderValue, writer: GntpMessageWriter) {
+    appendHeader(header.toString, value, writer)
   }
 
   @throws(classOf[IOException])
@@ -155,11 +142,11 @@ abstract class GntpMessage(`type`: GntpMessageType, password: GntpPassword, encr
   }
 
   def getHeaders: Map[String, String] = {
-    return ImmutableMap.copyOf(headers)
+    ImmutableMap.copyOf(headers)
   }
 
   def getBinarySections: List[BinarySection] = {
-    return ImmutableList.copyOf(binarySections: java.lang.Iterable[BinarySection])
+    ImmutableList.copyOf(binarySections: java.lang.Iterable[BinarySection])
   }
 
   protected def getWriter(output: OutputStream): GntpMessageWriter = {

@@ -55,6 +55,7 @@ class GntpChannelHandler(gntpClient: NioGntpClient, listener: GntpListener) exte
     if (gntpClient.isRegistered) {
       val notification: GntpNotification = gntpClient.getNotificationsSent.get(message.internalNotificationId).asInstanceOf[GntpNotification]
       if (notification != null) {
+
         if (message.isInstanceOf[GntpOkMessage]) {
           logger.debug("OK - message.")
           try {

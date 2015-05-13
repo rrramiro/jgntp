@@ -26,7 +26,7 @@ class GntpNotifyMessage(notification: GntpNotification, notificationId: Long, pa
       appendSeparator(writer)
     }
     else {
-      appendHeader(GntpMessageHeader.NOTIFICATION_ID, notificationId.asInstanceOf[AnyRef], writer)
+      appendHeader(GntpMessageHeader.NOTIFICATION_ID, notificationId.asInstanceOf[Number], writer)
       appendSeparator(writer)
     }
     if (notification.text.isDefined) {
@@ -34,11 +34,11 @@ class GntpNotifyMessage(notification: GntpNotification, notificationId: Long, pa
       appendSeparator(writer)
     }
     if (notification.sticky.isDefined) {
-      appendHeader(GntpMessageHeader.NOTIFICATION_STICKY, notification.sticky.get.asInstanceOf[AnyRef], writer)
+      appendHeader(GntpMessageHeader.NOTIFICATION_STICKY, notification.sticky.get, writer)
       appendSeparator(writer)
     }
     if (notification.priority.isDefined) {
-      appendHeader(GntpMessageHeader.NOTIFICATION_PRIORITY, notification.priority.get.getCode.asInstanceOf[AnyRef], writer)
+      appendHeader(GntpMessageHeader.NOTIFICATION_PRIORITY, notification.priority.get.getCode.asInstanceOf[Number], writer)
       appendSeparator(writer)
     }
     if (appendIcon(GntpMessageHeader.NOTIFICATION_ICON, notification.icon, writer)) {
@@ -52,12 +52,12 @@ class GntpNotifyMessage(notification: GntpNotification, notificationId: Long, pa
       case Some(callbackTarget) =>
         appendHeader(GntpMessageHeader.NOTIFICATION_CALLBACK_TARGET, callbackTarget, writer)
       case None =>
-        appendHeader(GntpMessageHeader.NOTIFICATION_CALLBACK_CONTEXT, notificationId.asInstanceOf[AnyRef], writer)
+        appendHeader(GntpMessageHeader.NOTIFICATION_CALLBACK_CONTEXT, notificationId.asInstanceOf[Number], writer)
         appendSeparator(writer)
         appendHeader(GntpMessageHeader.NOTIFICATION_CALLBACK_CONTEXT_TYPE, "int", writer)
     }
     appendSeparator(writer)
-    appendHeader(GntpMessageHeader.NOTIFICATION_INTERNAL_ID, notificationId.asInstanceOf[AnyRef], writer)
+    appendHeader(GntpMessageHeader.NOTIFICATION_INTERNAL_ID, notificationId.asInstanceOf[Number], writer)
     appendSeparator(writer)
     import scala.collection.JavaConversions._
     for (customHeader <- notification.headers.entrySet) {
