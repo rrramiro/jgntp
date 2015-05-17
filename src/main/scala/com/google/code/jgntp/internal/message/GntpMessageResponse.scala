@@ -2,8 +2,10 @@ package com.google.code.jgntp.internal.message
 
 import java.io._
 import java.util._
-import com.google.code.jgntp.internal.{GntpMessageType, GntpCallbackResult, GntpErrorStatus}
+import com.google.code.jgntp.internal.GntpMessageType
+import com.google.code.jgntp.internal.GntpCallbackResult.GntpCallbackResult
 import GntpMessageType._
+import com.google.code.jgntp.internal.GntpErrorStatus.GntpErrorStatus
 
 abstract class GntpMessageResponse(val `type`: GntpMessageType,
                                    val respondingType: GntpMessageType,

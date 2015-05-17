@@ -38,7 +38,7 @@ class GntpNotifyMessage(notification: GntpNotification, notificationId: Long, pa
       appendSeparator(writer)
     }
     if (notification.priority.isDefined) {
-      appendHeader(GntpMessageHeader.NOTIFICATION_PRIORITY, notification.priority.get.getCode, writer)
+      appendHeader(GntpMessageHeader.NOTIFICATION_PRIORITY, notification.priority.get.id.toString, writer)
       appendSeparator(writer)
     }
     if (appendIcon(GntpMessageHeader.NOTIFICATION_ICON, notification.icon, writer)) {

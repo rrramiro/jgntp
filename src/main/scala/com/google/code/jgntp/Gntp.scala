@@ -3,8 +3,10 @@ package com.google.code.jgntp
 
 import java.awt.image.RenderedImage
 import java.net.URI
+import java.security.spec.KeySpec
+import javax.crypto.spec.DESKeySpec
 
-import com.google.code.jgntp.internal.Priority
+import com.google.code.jgntp.internal.Priority.Priority
 import java.security._
 import com.google.code.jgntp.internal.message.HeaderValue
 import com.google.code.jgntp.util.Hex
@@ -45,14 +47,15 @@ case class GntpPassword(textPassword: String,
                         hashAlgorithm: String = GntpPassword.DEFAULT_KEY_HASH_ALGORITHM,
                         randomSaltAlgorithm: String = GntpPassword.DEFAULT_RANDOM_SALT_ALGORITHM) {
   private val _salt: Seq[Byte] = getSalt
+  private val _key = hash(textPassword.getBytes(Charsets.UTF_8).toSeq ++ _salt)
   val salt: String = Hex.toHexadecimal(_salt.toArray)
-  val key: Seq[Byte] = hash(textPassword.getBytes(Charsets.UTF_8).toSeq ++ _salt)
-  val keyHash: String = Hex.toHexadecimal(hash(key).toArray)
+  val keySpec: KeySpec = new DESKeySpec(_key.toArray)
+  val keyHash: String = Hex.toHexadecimal(hash(_key).toArray)
   val keyHashAlgorithm: String = hashAlgorithm.replaceAll("-", "")
 
   protected def getSeed: Long = System.currentTimeMillis()
 
-  protected def getSalt: Seq[Byte] = {
+  private def getSalt: Seq[Byte] = {
     val  random = SecureRandom.getInstance(randomSaltAlgorithm)
     random.setSeed(getSeed)
     val saltArray: Array[Byte] = new Array[Byte](GntpPassword.DEFAULT_SALT_SIZE)
@@ -61,7 +64,7 @@ case class GntpPassword(textPassword: String,
   }
 
 
-  protected def hash(keyToUse: Seq[Byte]): Seq[Byte] = {
+  private def hash(keyToUse: Seq[Byte]): Seq[Byte] = {
       MessageDigest.getInstance(hashAlgorithm).digest(keyToUse.toArray).toSeq
   }
 }

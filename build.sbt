@@ -24,7 +24,8 @@ libraryDependencies ++= Seq(
   "org.jboss.netty" % "netty" % "3.2.6.Final",
   "commons-io" % "commons-io" % "2.4",
   //"io.reactivex" %% "rxscala" % "0.24.1",
-  "junit" % "junit" % "4.12" % "test"
+  "junit" % "junit" % "4.12" % "test",
+  "com.novocode" % "junit-interface" % "0.11" % "test"
 
 )
 

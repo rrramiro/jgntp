@@ -10,6 +10,7 @@ import org.junit._
 import org.slf4j._
 import com.google.common.io._
 import java.util.concurrent.TimeUnit._
+import com.google.code.jgntp.internal.GntpErrorStatus.GntpErrorStatus
 
 object GntpClientIntegrationTest {
   val APPLICATION_ICON: String = "app-icon.png"

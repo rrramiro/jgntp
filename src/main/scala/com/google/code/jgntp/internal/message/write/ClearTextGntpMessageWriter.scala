@@ -15,7 +15,7 @@ class ClearTextGntpMessageWriter extends GntpMessageWriter {
   }
 
   protected def getDataForBinarySection(binarySection: BinarySection): Array[Byte] = {
-    return binarySection.data
+    binarySection.data
   }
 }
 

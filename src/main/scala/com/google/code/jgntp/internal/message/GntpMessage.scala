@@ -9,7 +9,7 @@ import java.text._
 import java.util._
 import javax.imageio._
 import com.google.code.jgntp._
-import com.google.code.jgntp.internal.GntpMessageHeader
+import com.google.code.jgntp.internal.GntpMessageHeader.GntpMessageHeader
 import com.google.code.jgntp.internal.message.write._
 import com.google.common.base._
 import com.google.common.collect._

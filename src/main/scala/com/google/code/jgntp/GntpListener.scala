@@ -1,6 +1,6 @@
 package com.google.code.jgntp
 
-import com.google.code.jgntp.internal.GntpErrorStatus
+import com.google.code.jgntp.internal.GntpErrorStatus.GntpErrorStatus
 
 
 trait GntpListener {

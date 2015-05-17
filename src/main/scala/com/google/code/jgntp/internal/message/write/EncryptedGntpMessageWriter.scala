@@ -25,7 +25,7 @@ class EncryptedGntpMessageWriter extends GntpMessageWriter {
     buffer = ChannelBuffers.dynamicBuffer
     try {
       val keyFactory: SecretKeyFactory = SecretKeyFactory.getInstance(EncryptedGntpMessageWriter.DEFAULT_ALGORITHM)
-      secretKey = keyFactory.generateSecret(new DESKeySpec(gntpPassword.key.toArray))
+      secretKey = keyFactory.generateSecret(gntpPassword.keySpec)
       iv = new IvParameterSpec(secretKey.getEncoded)
       cipher = Cipher.getInstance(EncryptedGntpMessageWriter.DEFAULT_TRANSFORMATION)
       cipher.init(Cipher.ENCRYPT_MODE, secretKey, iv)
@@ -61,12 +61,12 @@ class EncryptedGntpMessageWriter extends GntpMessageWriter {
   }
 
   protected def getDataForBinarySection(binarySection: BinarySection): Array[Byte] = {
-    return encrypt(binarySection.data)
+    encrypt(binarySection.data)
   }
 
   protected def encrypt(data: Array[Byte]): Array[Byte] = {
     try {
-      return cipher.doFinal(data)
+      cipher.doFinal(data)
     }
     catch {
       case e: GeneralSecurityException => {

@@ -76,11 +76,11 @@ class GntpChannelHandler(gntpClient: NioGntpClient, listener: GntpListener) exte
           }
           val callbackMessage: GntpCallbackMessage = message.asInstanceOf[GntpCallbackMessage]
           callbackMessage.callbackResult match {
-            case GntpCallbackResult.CLICK =>
+            case GntpCallbackResult.CLICK | GntpCallbackResult.CLICKED =>
               listener.onClickCallback(notification)
-            case GntpCallbackResult.CLOSE =>
+            case GntpCallbackResult.CLOSE | GntpCallbackResult.CLOSED =>
               listener.onCloseCallback(notification)
-            case GntpCallbackResult.TIMEOUT =>
+            case GntpCallbackResult.TIMEOUT | GntpCallbackResult.TIMEDOUT =>
               listener.onTimeoutCallback(notification)
             case _ =>
               throw new IllegalStateException("Unknown callback result: " + callbackMessage.callbackResult)

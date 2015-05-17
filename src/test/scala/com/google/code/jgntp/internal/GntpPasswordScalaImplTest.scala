@@ -10,7 +10,6 @@ class GntpPasswordScalaImplTest {
     val password: GntpPassword = new GntpPassword("test") {
      override protected def getSeed: Long = 10000000L
     }
-    val expectedKey = "8DEA4BDB68FFD8A3D7A5A715ACF4092B8A419D43889D5C0898B48BAE7CD000854B0966DCF1A1D6BF607727DDF2B4B5DC094B59778BDDC0AAAA9D70879A3674ED"
-    assertEquals(password.keyHash, expectedKey)
+    assertEquals(password.keyHash, "8dea4bdb68ffd8a3d7a5a715acf4092b8a419d43889d5c0898b48bae7cd000854b0966dcf1a1d6bf607727ddf2b4b5dc094b59778bddc0aaaa9d70879a3674ed")
   }
 }

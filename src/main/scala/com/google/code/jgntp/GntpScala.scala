@@ -91,11 +91,11 @@ object GntpScala {
             retryTimeUnit: TimeUnit = GntpScala.DEFAULT_RETRY_TIME_UNIT,
             notificationRetryCount: Int = GntpScala.DEFAULT_NOTIFICATION_RETRIES //0
              ): GntpClient = {
-    Preconditions.checkNotNull(applicationInfo, "Application info must not be null", Nil: _ *)
-    Preconditions.checkNotNull(growlHost, "Growl host must not be null", Nil: _ *)
-    Preconditions.checkArgument(growlPort > 0, "Port must not be negative", Nil: _ *)
-    Preconditions.checkArgument(retryTime > 0, "Retry time must be greater than zero", Nil: _ *)
-    Preconditions.checkNotNull(retryTimeUnit, "Retry time unit must not be null", Nil: _ *)
+    assert(null != applicationInfo, "Application info must not be null")
+    assert(null != growlHost, "Growl host must not be null")
+    assert(growlPort > 0, "Port must not be negative")
+    assert(retryTime > 0, "Retry time must be greater than zero")
+    assert(null != retryTimeUnit, "Retry time unit must not be null")
     val growlAddress: SocketAddress = new InetSocketAddress(GntpScala.getInetAddress(growlHost), growlPort)
     if (!tcp && listener != null) {
       throw new IllegalArgumentException("Cannot set listener on a non-TCP client")
