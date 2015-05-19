@@ -6,11 +6,11 @@ import com.google.code.jgntp.internal.GntpMessageHeader
 import com.google.code.jgntp.internal.message.write._
 import com.google.code.jgntp.internal.GntpMessageType
 
-class GntpRegisterMessage(applicationInfo: GntpApplicationInfo, password: GntpPassword, encrypt: Boolean) extends GntpMessage(GntpMessageType.REGISTER, password, encrypt) {
+class GntpRegisterMessage(applicationInfo: GntpApplicationInfo, password: GntpPassword) extends GntpMessage(GntpMessageType.REGISTER) {
 
   @throws(classOf[IOException])
   def append(output: OutputStream) {
-    val writer: GntpMessageWriter = getWriter(output)
+    val writer: GntpMessageWriter = new GntpMessageWriter(output, password)
     appendStatusLine(writer)
     appendSeparator(writer)
     writer.startHeaders

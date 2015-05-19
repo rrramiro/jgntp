@@ -21,8 +21,8 @@ trait GntpClient {
    *
    * @throws InterruptedException If the current thread is interrupted.
    */
-  @throws(classOf[InterruptedException])
-  def waitRegistration
+//  @throws(classOf[InterruptedException])
+//  def waitRegistration
 
   /**
    * Wait until this client is registered within the given waiting time.
@@ -33,8 +33,8 @@ trait GntpClient {
    * @return True if this client registered successfully before the waiting
    *         time elapsed, false otherwise.
    */
-  @throws(classOf[InterruptedException])
-  def waitRegistration(time: Long, unit: TimeUnit): Boolean
+//  @throws(classOf[InterruptedException])
+//  def waitRegistration(time: Long, unit: TimeUnit): Boolean
 
   /**
    * Send the given notification waiting uninterruptbly if this client is not
@@ -71,5 +71,5 @@ trait GntpClient {
   /**
    * @return True if this client is shut down.
    */
-  def isShutdown: Boolean
+//  def isShutdown: Boolean
 }

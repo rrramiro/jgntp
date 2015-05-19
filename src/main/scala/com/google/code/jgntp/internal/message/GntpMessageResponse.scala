@@ -9,7 +9,7 @@ import com.google.code.jgntp.internal.GntpErrorStatus.GntpErrorStatus
 
 abstract class GntpMessageResponse(val `type`: GntpMessageType,
                                    val respondingType: GntpMessageType,
-                                   val internalNotificationId: Long) extends GntpMessage(`type`, null, false) {
+                                   val internalNotificationId: Long) extends GntpMessage(`type`) {
 
   @throws(classOf[IOException])
   def append(output: OutputStream) {

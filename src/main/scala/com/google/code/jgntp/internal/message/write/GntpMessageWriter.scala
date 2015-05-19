@@ -6,17 +6,11 @@ import com.google.code.jgntp.internal.GntpVersion
 import com.google.code.jgntp.internal.message._
 import com.google.code.jgntp.util.Hex
 import com.google.code.jgntp.internal.GntpMessageType._
+import org.jboss.netty.buffer.{ChannelBufferOutputStream, ChannelBuffers, ChannelBuffer}
 
-abstract class GntpMessageWriter {
-  protected var output: OutputStream = null
-  protected var writer: OutputStreamWriter = null
-  protected var password: GntpPassword = null
-
-  def prepare(outputStream: OutputStream, gntpPassword: GntpPassword) {
-    this.output = outputStream
-    this.writer = new OutputStreamWriter(outputStream, GntpMessage.ENCODING)
-    this.password = gntpPassword
-  }
+class GntpMessageWriter(val output: OutputStream, val password: GntpPassword) {
+  protected var writer: OutputStreamWriter = new OutputStreamWriter(output, GntpMessage.ENCODING)
+  val buffer: ChannelBuffer = ChannelBuffers.dynamicBuffer
 
   @throws(classOf[IOException])
   def writeStatusLine(`type`: GntpMessageType) {
@@ -24,7 +18,7 @@ abstract class GntpMessageWriter {
     writer.append(' ').append(`type`.toString)
     writer.append(' ')
     writeEncryptionSpec
-    if (password != null) {
+    if (!password.textPassword.isEmpty) {
       writer.append(' ').append(password.keyHashAlgorithm)
       writer.append(':').append(password.keyHash)
       writer.append('.').append(password.salt)
@@ -34,6 +28,10 @@ abstract class GntpMessageWriter {
   @throws(classOf[IOException])
   def startHeaders {
     writer.flush
+    //TODO fix encrypted mode
+    if(password.encrypted) {
+      writer = new OutputStreamWriter(new ChannelBufferOutputStream(buffer), GntpMessage.ENCODING)
+    }
   }
 
   @throws(classOf[IOException])
@@ -44,6 +42,16 @@ abstract class GntpMessageWriter {
   @throws(classOf[IOException])
   def finishHeaders {
     writer.flush
+    //TODO fix encrypted mode
+    if(password.encrypted) {
+      val headerData: Array[Byte] = new Array[Byte](buffer.readableBytes)
+      buffer.getBytes(0, headerData)
+      val encryptedHeaderData: Array[Byte] = password.encrypt(headerData)
+      output.write(encryptedHeaderData)
+      writer = new OutputStreamWriter(output, GntpMessage.ENCODING)
+      writeSeparator
+      writeSeparator
+    }
   }
 
   @throws(classOf[IOException])
@@ -64,7 +72,11 @@ abstract class GntpMessageWriter {
   }
 
   @throws(classOf[IOException])
-  protected def writeEncryptionSpec
+  protected def writeEncryptionSpec {
+    writer.append(password.getEncryptionSpec)
+  }
 
-  protected def getDataForBinarySection(binarySection: BinarySection): Array[Byte]
+  protected def getDataForBinarySection(binarySection: BinarySection): Array[Byte] = {
+    password.encrypt(binarySection.data)
+  }
 }

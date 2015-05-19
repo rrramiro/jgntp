@@ -7,11 +7,11 @@ import com.google.code.jgntp.internal.message.write._
 import com.google.code.jgntp.internal.GntpMessageType._
 import com.google.code.jgntp.internal.GntpMessageType
 
-class GntpNotifyMessage(notification: GntpNotification, notificationId: Long, password: GntpPassword, encrypt: Boolean) extends GntpMessage(GntpMessageType.NOTIFY, password, encrypt) {
+class GntpNotifyMessage(notification: GntpNotification, notificationId: Long, password: GntpPassword) extends GntpMessage(GntpMessageType.NOTIFY) {
 
   @throws(classOf[IOException])
   def append(output: OutputStream) {
-    val writer: GntpMessageWriter = getWriter(output)
+    val writer: GntpMessageWriter = new GntpMessageWriter(output, password)
     appendStatusLine(writer)
     appendSeparator(writer)
     writer.startHeaders

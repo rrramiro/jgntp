@@ -14,7 +14,7 @@ object NioUdpGntpClient {
   private val notificationsSent: BiMap[Long, AnyRef] = HashBiMap.create[Long, AnyRef]
 }
 
-class NioUdpGntpClient(applicationInfo: GntpApplicationInfo, growlAddress: SocketAddress, executor: Executor, password: GntpPassword, encrypted: Boolean) extends NioGntpClient(applicationInfo, growlAddress, password, encrypted) {
+class NioUdpGntpClient(applicationInfo: GntpApplicationInfo, growlAddress: SocketAddress, executor: Executor, password: GntpPassword) extends NioGntpClient(applicationInfo, growlAddress, password) {
   assert(executor != null, "Executor must not be null")
   private final val bootstrap: ConnectionlessBootstrap = new ConnectionlessBootstrap(new OioDatagramChannelFactory(executor))
   bootstrap.setPipelineFactory(new GntpChannelPipelineFactory(new GntpChannelHandler(this, null)))
@@ -24,14 +24,14 @@ class NioUdpGntpClient(applicationInfo: GntpApplicationInfo, growlAddress: Socke
 
 
   protected def doRegister {
-    val message: GntpMessage = new GntpRegisterMessage(getApplicationInfo, getPassword, isEncrypted)
-    datagramChannel.write(message, getGrowlAddress)
-    getRegistrationLatch.countDown
+    val message: GntpMessage = new GntpRegisterMessage(applicationInfo, password)
+    datagramChannel.write(message, growlAddress)
+    registrationLatch.countDown
   }
 
   protected def doNotify(notification: GntpNotification) {
-    val message: GntpNotifyMessage = new GntpNotifyMessage(notification, -1, getPassword, isEncrypted)
-    datagramChannel.write(message, getGrowlAddress)
+    val message: GntpNotifyMessage = new GntpNotifyMessage(notification, -1, password)
+    datagramChannel.write(message, growlAddress)
   }
 
   @throws(classOf[InterruptedException])

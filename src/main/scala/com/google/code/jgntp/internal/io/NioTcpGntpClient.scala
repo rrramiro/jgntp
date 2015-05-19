@@ -23,10 +23,9 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
                        executor: Executor,
                        listener: GntpListener,
                        password: GntpPassword,
-                       encrypted: Boolean,
                        retryTime: Long = 0L,
                        retryTimeUnit: TimeUnit,
-                       notificationRetryCount: Int = 0) extends NioGntpClient(applicationInfo, growlAddress, password, encrypted) {
+                       notificationRetryCount: Int = 0) extends NioGntpClient(applicationInfo, growlAddress, password) {
 
   assert(executor != null, "Executor must not be null")
   if (retryTime > 0) {
@@ -56,7 +55,7 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
         tryingRegistration = false
         if (future.isSuccess) {
           channelGroup.add(future.getChannel)
-          val message: GntpMessage = new GntpRegisterMessage(getApplicationInfo, getPassword, isEncrypted)
+          val message: GntpMessage = new GntpRegisterMessage(applicationInfo, password)
           future.getChannel.write(message)
         }
       }
@@ -71,7 +70,7 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
           channelGroup.add(future.getChannel)
           val notificationId: Long = notificationIdGenerator.getAndIncrement
           notificationsSent.put(notificationId, notification)
-          val message: GntpMessage = new GntpNotifyMessage(notification, notificationId, getPassword, isEncrypted)
+          val message: GntpMessage = new GntpNotifyMessage(notification, notificationId, password)
           future.getChannel.write(message)
         }
         else {

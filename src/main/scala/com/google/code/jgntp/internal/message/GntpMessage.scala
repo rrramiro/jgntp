@@ -32,9 +32,11 @@ object GntpMessage {
   val IMAGE_FORMAT: String = "png"
   val BINARY_SECTION_ID: String = "Identifier:"
   val BINARY_SECTION_LENGTH: String = "Length:"
+
+
 }
 
-abstract class GntpMessage(`type`: GntpMessageType, password: GntpPassword, encrypt: Boolean) {
+abstract class GntpMessage(`type`: GntpMessageType) {
   var binarySections = new ListBuffer[BinarySection]
   private final val dateFormat: DateFormat =  new SimpleDateFormat(GntpMessage.DATE_TIME_FORMAT)
   private final val buffer: StringBuilder = new StringBuilder
@@ -125,15 +127,5 @@ abstract class GntpMessage(`type`: GntpMessageType, password: GntpPassword, encr
     binarySections = new ListBuffer
   }
 
-  protected def getWriter(output: OutputStream): GntpMessageWriter = {
-    var messageWriter: GntpMessageWriter = null
-    if (encrypt) {
-      messageWriter = new EncryptedGntpMessageWriter
-    }
-    else {
-      messageWriter = new ClearTextGntpMessageWriter
-    }
-    messageWriter.prepare(output, password)
-    messageWriter
-  }
+
 }

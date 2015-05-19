@@ -11,16 +11,16 @@ object NioGntpClient {
   private val logger: Logger = LoggerFactory.getLogger(classOf[NioGntpClient])
 }
 
-abstract class NioGntpClient(applicationInfo: GntpApplicationInfo, growlAddress: SocketAddress, password: GntpPassword, encrypted: Boolean) extends GntpClient {
+abstract class NioGntpClient(val applicationInfo: GntpApplicationInfo, val growlAddress: SocketAddress, val password: GntpPassword) extends GntpClient {
   assert(applicationInfo != null, "Application info must not be null")
   assert(growlAddress != null, "Address must not be null")
-  if (encrypted) {
-    assert(password != null, "Password must not be null if sending encrypted messages")
+  if (password.encrypted) {
+    assert(password.textPassword != null, "Password must not be null if sending encrypted messages") //TODO verify
   }
 
-  private final val registrationLatch: CountDownLatch = new CountDownLatch(1)
+  val registrationLatch: CountDownLatch = new CountDownLatch(1)
   @volatile
-  private var closed: Boolean = false
+  var closed: Boolean = false
 
 
   protected def doRegister
@@ -35,7 +35,7 @@ abstract class NioGntpClient(applicationInfo: GntpApplicationInfo, growlAddress:
   private[io] def retryRegistration
 
   def register {
-    if (isShutdown) {
+    if (closed) {
       throw new IllegalStateException("GntpClient has been shutdown")
     }
     NioGntpClient.logger.debug("Registering GNTP application [{}]", applicationInfo)
@@ -43,30 +43,21 @@ abstract class NioGntpClient(applicationInfo: GntpApplicationInfo, growlAddress:
   }
 
   def isRegistered: Boolean = {
-    val isRegistered: Boolean = registrationLatch.getCount == 0 && !isShutdown
+    val isRegistered: Boolean = registrationLatch.getCount == 0 && !closed
     NioGntpClient.logger.debug("checking if the [{}] application is registered. Registered = {}", applicationInfo, isRegistered)
-    return isRegistered
+    isRegistered
   }
 
-  @throws(classOf[InterruptedException])
-  def waitRegistration {
-    registrationLatch.await
-  }
-
-  @throws(classOf[InterruptedException])
-  def waitRegistration(time: Long, unit: TimeUnit): Boolean = {
-    return registrationLatch.await(time, unit)
-  }
 
   def notify(notification: GntpNotification) {
     var interrupted: Boolean = false
     var notified = false
-    while (!isShutdown && !notified) {
+    while (!closed && !notified) {
       try {
-        waitRegistration
+        registrationLatch.await
         notifyInternal(notification)
         notified = true
-        //break //todo: break is not supported
+        //break //TODO: break is not supported
       }
       catch {
         case e: InterruptedException => {
@@ -81,7 +72,7 @@ abstract class NioGntpClient(applicationInfo: GntpApplicationInfo, growlAddress:
 
   @throws(classOf[InterruptedException])
   def notify(notification: GntpNotification, time: Long, unit: TimeUnit): Boolean = {
-    if (waitRegistration(time, unit)) {
+    if (registrationLatch.await(time, unit)) {
       notifyInternal(notification)
       return true
     }
@@ -95,40 +86,13 @@ abstract class NioGntpClient(applicationInfo: GntpApplicationInfo, growlAddress:
     doShutdown(timeout, unit)
   }
 
-  def isShutdown: Boolean = {
-    return closed
-  }
-
-  private[io] def setRegistered {
-    registrationLatch.countDown
-  }
-
   protected def notifyInternal(notification: GntpNotification) {
-    if (!isShutdown) {
+    if (!closed) {
       NioGntpClient.logger.debug("Sending notification [{}]", notification)
       doNotify(notification)
     }
   }
 
-  protected def getApplicationInfo: GntpApplicationInfo = {
-    return applicationInfo
-  }
-
-  protected def getPassword: GntpPassword = {
-    return password
-  }
-
-  protected def isEncrypted: Boolean = {
-    return encrypted
-  }
-
-  protected def getGrowlAddress: SocketAddress = {
-    return growlAddress
-  }
-
-  protected def getRegistrationLatch: CountDownLatch = {
-    return registrationLatch
-  }
 }
 
 

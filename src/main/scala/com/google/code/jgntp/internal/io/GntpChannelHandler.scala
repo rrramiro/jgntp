@@ -112,7 +112,7 @@ class GntpChannelHandler(gntpClient: NioGntpClient, listener: GntpListener) exte
             listener.onRegistrationSuccess
           }
         } finally {
-          gntpClient.setRegistered
+          gntpClient.registrationLatch.countDown
         }
       }
       else if (message.isInstanceOf[GntpErrorMessage]) {

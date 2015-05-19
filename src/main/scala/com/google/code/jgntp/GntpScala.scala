@@ -86,7 +86,6 @@ object GntpScala {
             executor: Executor = null,
             listener: GntpListener = null,
             password: GntpPassword = null,
-            encrypted: Boolean = false,
             retryTime: Long = GntpScala.DEFAULT_RETRY_TIME, //0
             retryTimeUnit: TimeUnit = GntpScala.DEFAULT_RETRY_TIME_UNIT,
             notificationRetryCount: Int = GntpScala.DEFAULT_NOTIFICATION_RETRIES //0
@@ -102,10 +101,10 @@ object GntpScala {
     }
     val executorToUse: Executor = if (executor == null) Executors.newCachedThreadPool else executor
     if (tcp) {
-      new NioTcpGntpClient(applicationInfo, growlAddress, executorToUse, listener, password, encrypted, retryTime, retryTimeUnit, notificationRetryCount)
+      new NioTcpGntpClient(applicationInfo, growlAddress, executorToUse, listener, password, retryTime, retryTimeUnit, notificationRetryCount)
     }
     else {
-      new NioUdpGntpClient(applicationInfo, growlAddress, executorToUse, password, encrypted)
+      new NioUdpGntpClient(applicationInfo, growlAddress, executorToUse, password)
     }
   }
 }
