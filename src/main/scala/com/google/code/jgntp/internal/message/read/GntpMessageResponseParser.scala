@@ -28,7 +28,7 @@ class GntpMessageResponseParser {
     assert(!Iterables.isEmpty(splitted), "Empty message received from Growl")
     val iter: java.util.Iterator[String] = splitted.iterator
     val statusLine: String = iter.next
-    assert(statusLine.startsWith(GntpMessage.PROTOCOL_ID + "/" + GntpVersion.ONE_DOT_ZERO), "Unknown protocol version")
+    assert(statusLine.startsWith(GntpMessage.PROTOCOL_ID + "/" + GntpMessage.VERSION), "Unknown protocol version")
     val statusLineIterable: Iterable[String] = statusLineSplitter.split(statusLine)
     val messageTypeText: String = Iterables.get(statusLineIterable, 1).substring(1)
     val messageType: GntpMessageType = GntpMessageType.withName(messageTypeText)
@@ -49,7 +49,7 @@ class GntpMessageResponseParser {
     }
   }
 
-  protected def createOkMessage(headers: Map[String, String]): GntpOkMessage = {
+  private def createOkMessage(headers: Map[String, String]): GntpOkMessage = {
     new GntpOkMessage(
       headers.get(GntpMessageHeader.NOTIFICATION_INTERNAL_ID.toString).fold(-1L)(_.toLong),
       getRespondingType(headers),
@@ -57,7 +57,7 @@ class GntpMessageResponseParser {
     )
   }
 
-  protected def createCallbackMessage(headers: Map[String, String]): GntpCallbackMessage = {
+  private def createCallbackMessage(headers: Map[String, String]): GntpCallbackMessage = {
     new GntpCallbackMessage(
       headers.get(GntpMessageHeader.NOTIFICATION_INTERNAL_ID.toString).fold(-1L)(_.toLong),
       headers.getOrElse(GntpMessageHeader.NOTIFICATION_ID.toString, null),
@@ -68,7 +68,7 @@ class GntpMessageResponseParser {
     )
   }
 
-  protected def createErrorMessage(headers: Map[String, String]): GntpErrorMessage = {
+  private def createErrorMessage(headers: Map[String, String]): GntpErrorMessage = {
     new GntpErrorMessage(
       headers.get(GntpMessageHeader.NOTIFICATION_INTERNAL_ID.toString).fold(-1L)(_.toLong),
       getRespondingType(headers),

@@ -2,9 +2,7 @@ package com.google.code.jgntp.internal.message.write
 
 import java.io._
 import com.google.code.jgntp._
-import com.google.code.jgntp.internal.GntpVersion
 import com.google.code.jgntp.internal.message._
-import com.google.code.jgntp.util.Hex
 import com.google.code.jgntp.internal.GntpMessageType._
 import org.jboss.netty.buffer.{ChannelBufferOutputStream, ChannelBuffers, ChannelBuffer}
 
@@ -13,16 +11,13 @@ class GntpMessageWriter(val output: OutputStream, val password: GntpPassword) {
   val buffer: ChannelBuffer = ChannelBuffers.dynamicBuffer
 
   @throws(classOf[IOException])
-  def writeStatusLine(`type`: GntpMessageType) {
-    writer.append(GntpMessage.PROTOCOL_ID).append('/').append(GntpVersion.ONE_DOT_ZERO)
-    writer.append(' ').append(`type`.toString)
-    writer.append(' ')
-    writeEncryptionSpec
-    if (!password.textPassword.isEmpty) {
-      writer.append(' ').append(password.keyHashAlgorithm)
-      writer.append(':').append(password.keyHash)
-      writer.append('.').append(password.salt)
-    }
+  def writeStatusLine(`type`: GntpMessageType) = {
+    s"${GntpMessage.PROTOCOL_ID}/${GntpMessage.VERSION} ${`type`.toString} ${password.getEncryptionSpec}" + (
+      if (!password.encrypted)
+        s":${password.iv} ${password.keyHashAlgorithm}:${password.keyHash}.${password.salt}"
+      else
+        ""
+    )
   }
 
   @throws(classOf[IOException])
@@ -35,7 +30,7 @@ class GntpMessageWriter(val output: OutputStream, val password: GntpPassword) {
   }
 
   @throws(classOf[IOException])
-  def writeHeaderLine(line: String) {
+  def append(line: String) {
     writer.append(line)
   }
 
@@ -49,31 +44,20 @@ class GntpMessageWriter(val output: OutputStream, val password: GntpPassword) {
       val encryptedHeaderData: Array[Byte] = password.encrypt(headerData)
       output.write(encryptedHeaderData)
       writer = new OutputStreamWriter(output, GntpMessage.ENCODING)
-      writeSeparator
-      writeSeparator
+      writer.append(GntpMessage.SEPARATOR).append(GntpMessage.SEPARATOR)
     }
   }
 
   @throws(classOf[IOException])
   def writeBinarySection(binarySection: BinarySection) {
     val data: Array[Byte] = getDataForBinarySection(binarySection)
-    writer.append(GntpMessage.BINARY_SECTION_ID).append(' ').append(binarySection.id)
-    writeSeparator
-    writer.append(GntpMessage.BINARY_SECTION_LENGTH).append(' ').append(data.size.toString)
-    writeSeparator
-    writeSeparator
+    writer.append(s"${GntpMessage.BINARY_SECTION_ID} ${binarySection.id}${GntpMessage.SEPARATOR}${GntpMessage.BINARY_SECTION_LENGTH} ${data.size.toString}${GntpMessage.SEPARATOR}${GntpMessage.SEPARATOR}")
     writer.flush
     output.write(data)
   }
 
-  @throws(classOf[IOException])
   def writeSeparator {
     writer.append(GntpMessage.SEPARATOR)
-  }
-
-  @throws(classOf[IOException])
-  protected def writeEncryptionSpec {
-    writer.append(password.getEncryptionSpec)
   }
 
   protected def getDataForBinarySection(binarySection: BinarySection): Array[Byte] = {

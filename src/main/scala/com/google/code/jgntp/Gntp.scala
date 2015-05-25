@@ -3,14 +3,12 @@ package com.google.code.jgntp
 
 import java.awt.image.RenderedImage
 import java.net.URI
-import java.security.spec.KeySpec
 import javax.crypto.{Cipher, SecretKeyFactory}
 import javax.crypto.spec.{IvParameterSpec, DESKeySpec}
 
 import com.google.code.jgntp.internal.Priority.Priority
 import java.security._
-import com.google.code.jgntp.internal.message.HeaderValue
-import com.google.code.jgntp.internal.message.write.EncryptedGntpMessageWriter
+import com.google.code.jgntp.internal.message.HeaderObject
 import com.google.code.jgntp.util.Hex
 import com.google.common.base.Charsets
 
@@ -28,13 +26,13 @@ case class GntpNotification(applicationName: String,
                             title: String,
                             text: Option[String],
                             callbackTarget: Option[URI] = None,
-                            headers: Map[String, HeaderValue],
                             icon: Option[Either[URI, RenderedImage]] = None,
                             id: Option[String] = None,
                             sticky: Option[Boolean] = None,
                             priority: Option[Priority] = None,
                             context: Option[AnyRef] = None, //TODO remove
-                            coalescingId: Option[String] = None)
+                            coalescingId: Option[String] = None,
+                            headers: Seq[(String, HeaderObject)])
 
 
 
@@ -58,15 +56,16 @@ case class GntpPassword(textPassword: String = "",
   val salt: String = Hex.toHexadecimal(_salt.toArray)
   val keyHash: String = Hex.toHexadecimal(hash(_key).toArray)
   val keyHashAlgorithm: String = hashAlgorithm.replaceAll("-", "")
-  val iv = new IvParameterSpec(_secretKey.getEncoded)
+  private val _iv = new IvParameterSpec(_secretKey.getEncoded)
+  val iv: String = new String(_iv.getIV)
   private val _cipher = Cipher.getInstance(GntpPassword.DEFAULT_TRANSFORMATION)
-  _cipher.init(Cipher.ENCRYPT_MODE, _secretKey, iv)
+  _cipher.init(Cipher.ENCRYPT_MODE, _secretKey, _iv)
 
   protected def getSeed: Long = System.currentTimeMillis()
 
   def encrypt(in: Array[Byte]) = if(encrypted) _cipher.doFinal(in) else in
 
-  def getEncryptionSpec = if(encrypted) GntpPassword.DEFAULT_ALGORITHM + ':' + Hex.toHexadecimal(iv.getIV) else GntpPassword.NONE_ENCRYPTION_ALGORITHM
+  def getEncryptionSpec = if(encrypted) GntpPassword.DEFAULT_ALGORITHM + ':' + Hex.toHexadecimal(_iv.getIV) else GntpPassword.NONE_ENCRYPTION_ALGORITHM
 
   private def getSalt: Seq[Byte] = {
     val  random = SecureRandom.getInstance(randomSaltAlgorithm)

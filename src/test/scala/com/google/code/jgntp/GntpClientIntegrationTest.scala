@@ -75,7 +75,7 @@ class GntpClientIntegrationTest {
       "Title",
       Some("Message"),
       None,
-      Map(GntpScala.APP_SPECIFIC_HEADER_PREFIX + "Filename" -> "file.txt"),
+      headers = Seq(GntpScala.APP_SPECIFIC_HEADER_PREFIX + "Filename" -> "file.txt"),
       context = Some(12345.asInstanceOf[AnyRef])
     ), 5, SECONDS)
 
@@ -85,7 +85,7 @@ class GntpClientIntegrationTest {
       "Title 2",
       Some("Message 2"),
       Some(URI.create("http://slashdot.org/")),
-      Map(GntpScala.CUSTOM_HEADER_PREFIX + "Payload" -> getClass.getResourceAsStream("sms.png")),
+      headers = Seq(GntpScala.CUSTOM_HEADER_PREFIX + "Payload" -> getClass.getResourceAsStream("sms.png")),
 
       icon = Some(Right(getImage(GntpClientIntegrationTest.APPLICATION_ICON)))
     ), 5, SECONDS)

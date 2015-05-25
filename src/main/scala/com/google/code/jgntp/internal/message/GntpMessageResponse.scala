@@ -7,7 +7,7 @@ import com.google.code.jgntp.internal.GntpCallbackResult.GntpCallbackResult
 import GntpMessageType._
 import com.google.code.jgntp.internal.GntpErrorStatus.GntpErrorStatus
 
-abstract class GntpMessageResponse(val `type`: GntpMessageType,
+abstract class GntpMessageResponse(`type`: GntpMessageType,
                                    val respondingType: GntpMessageType,
                                    val internalNotificationId: Long) extends GntpMessage(`type`) {
 

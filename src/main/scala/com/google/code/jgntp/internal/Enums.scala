@@ -2,9 +2,6 @@ package com.google.code.jgntp.internal
 
 
 
-object GntpVersion {
-  val ONE_DOT_ZERO  = "1.0"
-}
 
 object GntpErrorStatus extends Enumeration{
   type GntpErrorStatus = Value
