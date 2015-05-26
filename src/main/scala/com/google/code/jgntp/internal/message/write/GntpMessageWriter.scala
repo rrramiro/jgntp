@@ -11,10 +11,10 @@ class GntpMessageWriter(val output: OutputStream, val password: GntpPassword) {
   val buffer: ChannelBuffer = ChannelBuffers.dynamicBuffer
 
   @throws(classOf[IOException])
-  def writeStatusLine(`type`: GntpMessageType) = {
+  def writeStatusLine(`type`: GntpMessageType): String = {
     s"${GntpMessage.PROTOCOL_ID}/${GntpMessage.VERSION} ${`type`.toString} ${password.getEncryptionSpec}" + (
-      if (!password.encrypted)
-        s":${password.iv} ${password.keyHashAlgorithm}:${password.keyHash}.${password.salt}"
+      if (password.encrypted)
+        s" ${password.keyHashAlgorithm}:${password.keyHash}.${password.salt}"
       else
         ""
     )

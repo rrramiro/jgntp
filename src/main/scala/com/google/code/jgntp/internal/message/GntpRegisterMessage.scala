@@ -18,10 +18,12 @@ class GntpRegisterMessage(applicationInfo: GntpApplicationInfo, password: GntpPa
         GntpMessageHeader.APPLICATION_ICON.toString -> (uri: HeaderObject)
       case Right(image) =>
         GntpMessageHeader.APPLICATION_ICON.toString -> (image: HeaderObject)
-    }.toSeq
+    }.toSeq :+ (
+      GntpMessageHeader.NOTIFICATION_COUNT.toString -> (applicationInfo.notificationInfos.size: HeaderObject)
+      )
 
     val writer: GntpMessageWriter = new GntpMessageWriter(output, password)
-    writer.writeStatusLine(`type`)
+    writer.append(writer.writeStatusLine(`type`))
     writer.append(GntpMessage.SEPARATOR)
     //---------------------------------------------------
     writer.startHeaders
@@ -36,33 +38,29 @@ class GntpRegisterMessage(applicationInfo: GntpApplicationInfo, password: GntpPa
         binarySections += value.binarySection
     }
 
-
-    appendHeader(GntpMessageHeader.NOTIFICATION_COUNT.toString, applicationInfo.notificationInfos.size, writer)
-    writer.append(GntpMessage.SEPARATOR)
     writer.append(GntpMessage.SEPARATOR)
     for (notificationInfo <- applicationInfo.notificationInfos) {
-      appendHeader(GntpMessageHeader.NOTIFICATION_NAME.toString, notificationInfo.name, writer)
-      writer.append(GntpMessage.SEPARATOR)
-      if (notificationInfo.displayName.isDefined) {
-        appendHeader(GntpMessageHeader.NOTIFICATION_DISPLAY_NAME.toString, notificationInfo.displayName.get, writer)
-        writer.append(GntpMessage.SEPARATOR)
+      val notificationInfoHeaders: Seq[(String, HeaderObject)] = Seq(
+        GntpMessageHeader.NOTIFICATION_NAME.toString -> (notificationInfo.name: HeaderObject)
+      ) union notificationInfo.displayName.map{ notificationInfoDisplayName =>
+        GntpMessageHeader.NOTIFICATION_DISPLAY_NAME.toString -> (notificationInfoDisplayName: HeaderObject)
+      }.toSeq union notificationInfo.icon.map{
+        case Left(uri) =>
+          GntpMessageHeader.NOTIFICATION_ICON.toString -> (uri: HeaderObject)
+        case Right(image) =>
+          GntpMessageHeader.NOTIFICATION_ICON.toString -> (image: HeaderObject)
+      }.toSeq :+ (GntpMessageHeader.NOTIFICATION_ENABLED.toString -> (notificationInfo.enabled: HeaderObject))
+
+      notificationInfoHeaders.foreach {
+        case (key, value: HeaderValue) =>
+          appendHeader(key, value, writer)
+          writer.append(GntpMessage.SEPARATOR)
+        case (key, value: BinaryHeaderValue) =>
+          appendHeader(key, value, writer)
+          writer.append(GntpMessage.SEPARATOR)
+          binarySections += value.binarySection
       }
 
-
-      notificationInfo.icon match {
-        case Some(Left(uri)) =>
-          appendHeader(GntpMessageHeader.NOTIFICATION_ICON.toString, uri, writer)
-          writer.append(GntpMessage.SEPARATOR)
-        case Some(Right(image)) =>
-          val binaryHeaderValue: BinaryHeaderValue = image
-          appendHeader(GntpMessageHeader.NOTIFICATION_ICON.toString, binaryHeaderValue, writer)
-          binarySections += binaryHeaderValue.binarySection
-          writer.append(GntpMessage.SEPARATOR)
-        case None =>
-      }
-
-      appendHeader(GntpMessageHeader.NOTIFICATION_ENABLED.toString, notificationInfo.enabled, writer)
-      writer.append(GntpMessage.SEPARATOR)
       writer.append(GntpMessage.SEPARATOR)
     }
     writer.finishHeaders
