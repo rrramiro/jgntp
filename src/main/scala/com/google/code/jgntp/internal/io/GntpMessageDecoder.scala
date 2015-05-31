@@ -2,14 +2,15 @@ package com.google.code.jgntp.internal.io
 
 import java.io._
 import java.util.concurrent.atomic._
-import org.jboss.netty.buffer._
-import org.jboss.netty.channel._
-import org.jboss.netty.channel.ChannelHandler._
-import org.jboss.netty.handler.codec.oneone._
-import org.slf4j._
+
 import com.google.code.jgntp.internal.message._
 import com.google.code.jgntp.internal.message.read._
 import com.google.common.io._
+import org.jboss.netty.buffer._
+import org.jboss.netty.channel.ChannelHandler._
+import org.jboss.netty.channel._
+import org.jboss.netty.handler.codec.oneone._
+import org.slf4j._
 
 @Sharable
  object GntpMessageDecoder {

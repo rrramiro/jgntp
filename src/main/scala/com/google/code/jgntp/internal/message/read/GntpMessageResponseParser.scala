@@ -1,18 +1,17 @@
 package com.google.code.jgntp.internal.message.read
 
+import java.lang.Iterable
 import java.text._
 import java.util.Date
-import java.lang.Iterable
+
 import com.google.code.jgntp.internal.GntpMessageHeader.GntpMessageHeader
-import com.google.code.jgntp.internal.GntpMessageType
-import com.google.code.jgntp.internal._
+import com.google.code.jgntp.internal.GntpMessageType._
+import com.google.code.jgntp.internal.{GntpMessageType, _}
 import com.google.code.jgntp.internal.message._
 import com.google.common.base._
 import com.google.common.collect._
-import com.google.code.jgntp.internal.GntpMessageType._
 
-
-import scala.util.{Failure, Try, Success}
+import scala.util.{Failure, Success, Try}
 
 class GntpMessageResponseParser {
   private val separatorSplitter: Splitter = Splitter.on(GntpMessage.SEPARATOR).omitEmptyStrings

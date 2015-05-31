@@ -1,8 +1,8 @@
 package com.google.code.jgntp.internal
 
-import org.junit._
 import com.google.code.jgntp._
 import org.junit.Assert._
+import org.junit._
 
 class GntpPasswordScalaImplTest {
   @Test

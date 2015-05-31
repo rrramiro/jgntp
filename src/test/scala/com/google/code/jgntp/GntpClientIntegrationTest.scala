@@ -3,14 +3,14 @@ package com.google.code.jgntp
 import java.awt.image._
 import java.io._
 import java.net._
+import java.util.concurrent.TimeUnit._
 import javax.imageio._
-import com.google.code.jgntp.internal._
+
+import com.google.code.jgntp.internal.GntpErrorStatus.GntpErrorStatus
 import com.google.code.jgntp.internal.message._
+import com.google.common.io._
 import org.junit._
 import org.slf4j._
-import com.google.common.io._
-import java.util.concurrent.TimeUnit._
-import com.google.code.jgntp.internal.GntpErrorStatus.GntpErrorStatus
 
 object GntpClientIntegrationTest {
   val APPLICATION_ICON: String = "app-icon.png"

@@ -4,15 +4,15 @@ import java.net._
 import java.util._
 import java.util.concurrent._
 import java.util.concurrent.atomic._
+
+import com.google.code.jgntp._
+import com.google.code.jgntp.internal.message._
+import com.google.common.collect._
 import org.jboss.netty.bootstrap._
 import org.jboss.netty.channel._
 import org.jboss.netty.channel.group._
 import org.jboss.netty.channel.socket.nio._
 import org.slf4j._
-import com.google.code.jgntp._
-import com.google.code.jgntp.internal.message._
-import com.google.common.base._
-import com.google.common.collect._
 
 object NioTcpGntpClient {
   private val logger: Logger = LoggerFactory.getLogger(classOf[NioTcpGntpClient])
@@ -34,7 +34,7 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
   assert(notificationRetryCount >= 0, "Notification retries must be equal or greater than zero")
 
   private final val bootstrap: ClientBootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(executor, executor))
-  bootstrap.setPipelineFactory(new GntpChannelPipelineFactory(new GntpChannelHandler(this, listener)))
+  bootstrap.setPipelineFactory(new GntpChannelPipelineFactory(new GntpChannelHandler(this, Some(listener))))
   bootstrap.setOption("tcpNoDelay", true)
   bootstrap.setOption("remoteAddress", growlAddress)
   bootstrap.setOption("soTimeout", 60 * 1000)
@@ -108,11 +108,11 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
       retryExecutorService.awaitTermination(timeout, unit)
     }
     channelGroup.close.await(timeout, unit)
-    bootstrap.releaseExternalResources
+    bootstrap.releaseExternalResources()
   }
 
   private[io] def getNotificationsSent: BiMap[Long, AnyRef] = {
-    return notificationsSent
+    notificationsSent
   }
 
   private[io] def retryRegistration {

@@ -3,11 +3,11 @@ package com.google.code.jgntp
 
 import java.awt.image.RenderedImage
 import java.net.URI
+import java.security._
+import javax.crypto.spec.{DESKeySpec, IvParameterSpec}
 import javax.crypto.{Cipher, SecretKeyFactory}
-import javax.crypto.spec.{IvParameterSpec, DESKeySpec}
 
 import com.google.code.jgntp.internal.Priority.Priority
-import java.security._
 import com.google.code.jgntp.internal.message.HeaderObject
 import com.google.code.jgntp.util.Hex
 import com.google.common.base.Charsets

@@ -1,23 +1,16 @@
 package com.google.code.jgntp.internal.message
 
-import java.awt.image._
 import java.io._
-import java.lang.String
-import java.net._
 import java.nio.charset._
-import java.text._
 import java.util._
-import javax.imageio._
+
 import com.google.code.jgntp._
-import com.google.code.jgntp.internal.GntpMessageHeader.GntpMessageHeader
-import com.google.code.jgntp.internal.message.write._
-import com.google.common.base._
-import com.google.common.collect._
-import com.google.common.io._
 import com.google.code.jgntp.internal.GntpMessageType._
-import scala.collection.mutable.ListBuffer
-import scala.language.implicitConversions
+import com.google.common.base._
+import org.jboss.netty.buffer.{ChannelBuffer, ChannelBufferOutputStream, ChannelBuffers}
+
 import scala.collection.JavaConversions._
+import scala.language.implicitConversions
 
 object GntpMessage {
   val PROTOCOL_ID: String = "GNTP"
@@ -36,30 +29,61 @@ object GntpMessage {
 
 }
 
-abstract class GntpMessage(val `type`: GntpMessageType) {
-  var binarySections = new ListBuffer[BinarySection]
+class GntpMessage(val `type`: GntpMessageType)
 
-  def append(output: OutputStream)
 
-  def appendHeader(name: String, valueInternal: HeaderObject, writer: GntpMessageWriter) {
-    writer.append(s"${name}${GntpMessage.HEADER_SEPARATOR} ${valueInternal.toHeader}")
+abstract class GntpMessageRequest(`type`: GntpMessageType, password: GntpPassword) extends GntpMessage(`type`){
+  val allHeaders: Seq[(String, HeaderObject)]
+
+  def append(output: OutputStream) {
+    output.write({
+      s"${GntpMessage.PROTOCOL_ID}/${GntpMessage.VERSION} ${`type`.toString} ${password.getEncryptionSpec}" + (
+        if (password.encrypted)
+          s" ${password.keyHashAlgorithm}:${password.keyHash}.${password.salt}${GntpMessage.SEPARATOR}"
+        else
+          GntpMessage.SEPARATOR
+        )
+    }.getBytes(GntpMessage.ENCODING))
+    writeHeaders(allHeaders, output)
+    appendBinarySections(allHeaders, output)
   }
 
-
-  def appendBinarySections(writer: GntpMessageWriter) {
+  def appendBinarySections(allHeaders: Seq[(String, HeaderObject)], output: OutputStream) {
+    val binarySections = allHeaders.collect {
+      case (key, value: BinaryHeaderValue) =>
+        value.binarySection
+    }
     val iter: Iterator[BinarySection] = binarySections.iterator
     while (iter.hasNext) {
       val binarySection: BinarySection = iter.next
-      writer.writeBinarySection(binarySection)
+      val data = password.encrypt(binarySection.data)
+      output.write(s"${GntpMessage.BINARY_SECTION_ID} ${binarySection.id}${GntpMessage.SEPARATOR}${GntpMessage.BINARY_SECTION_LENGTH} ${data.size.toString}${GntpMessage.SEPARATOR}${GntpMessage.SEPARATOR}".getBytes(GntpMessage.ENCODING))
+      output.flush()
+      output.write(data)
       if (iter.hasNext) {
-        writer.writeSeparator
-        writer.writeSeparator
+        output.write(s"${GntpMessage.SEPARATOR}${GntpMessage.SEPARATOR}".getBytes(GntpMessage.ENCODING))
       }
     }
   }
 
-  def clearBinarySections {
-    binarySections.clear()// = new ListBuffer
+
+  def writeHeaders(allHeaders: Seq[(String, HeaderObject)], output: OutputStream): Unit ={
+    val buffer: ChannelBuffer = ChannelBuffers.dynamicBuffer
+    val writerTmp = new OutputStreamWriter(new ChannelBufferOutputStream(buffer), GntpMessage.ENCODING)
+    allHeaders.foreach {
+      case (_, HeaderSpacer) =>
+        writerTmp.append(GntpMessage.SEPARATOR)
+      case (name, valueInternal: HeaderObject) =>
+        writerTmp.write(s"${name}${GntpMessage.HEADER_SEPARATOR} ${valueInternal.toHeader}")
+        writerTmp.append(GntpMessage.SEPARATOR)
+    }
+    writerTmp.flush()
+    val headerData: Array[Byte] = new Array[Byte](buffer.readableBytes)
+    buffer.getBytes(0, headerData)
+
+    output.flush()
+    output.write(password.encrypt(headerData))
+    output.write(s"${GntpMessage.SEPARATOR}${GntpMessage.SEPARATOR}".getBytes(GntpMessage.ENCODING))
   }
 
 }

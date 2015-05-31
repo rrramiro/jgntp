@@ -1,20 +1,16 @@
 package com.google.code.jgntp.internal.message
 
-import java.io._
 import java.util._
-import com.google.code.jgntp.internal.GntpMessageType
+
 import com.google.code.jgntp.internal.GntpCallbackResult.GntpCallbackResult
-import GntpMessageType._
 import com.google.code.jgntp.internal.GntpErrorStatus.GntpErrorStatus
+import com.google.code.jgntp.internal.GntpMessageType
+import com.google.code.jgntp.internal.GntpMessageType._
 
 abstract class GntpMessageResponse(`type`: GntpMessageType,
                                    val respondingType: GntpMessageType,
                                    val internalNotificationId: Long) extends GntpMessage(`type`) {
 
-  @throws(classOf[IOException])
-  def append(output: OutputStream) {
-    throw new UnsupportedOperationException("This is a response message")
-  }
 }
 
 class GntpCallbackMessage(internalNotificationId: Long,

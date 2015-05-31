@@ -1,14 +1,15 @@
 package com.google.code.jgntp.internal.io
 
-import org.jboss.netty.buffer.ChannelBuffers.copiedBuffer
 import java.io._
 import java.util.concurrent.atomic._
+
+import com.google.common.io._
+import org.jboss.netty.buffer.ChannelBuffers.copiedBuffer
 import org.jboss.netty.buffer._
-import org.jboss.netty.channel._
 import org.jboss.netty.channel.ChannelHandler._
+import org.jboss.netty.channel._
 import org.jboss.netty.handler.codec.oneone._
 import org.slf4j._
-import com.google.common.io._
 
 @Sharable object DelimiterBasedFrameEncoder {
   private val DUMP_MESSAGES_DIRECTORY_PROPERTY: String = "gntp.request.dump.dir"

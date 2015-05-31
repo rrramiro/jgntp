@@ -1,7 +1,7 @@
 package com.google.code.jgntp.internal
 
-import org.junit.Test
 import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class PriorityTest {
 

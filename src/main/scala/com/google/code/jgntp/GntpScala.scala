@@ -17,11 +17,9 @@ package com.google.code.jgntp
 
 import java.net._
 import java.util.concurrent._
-import com.google.code.jgntp.internal._
+
 import com.google.code.jgntp.internal.io._
-import com.google.common.base._
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 
 object GntpScala {
   val CUSTOM_HEADER_PREFIX: String = "X-"

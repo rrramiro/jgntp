@@ -3,9 +3,10 @@ package com.google.code.jgntp.internal
 import java.awt.image.RenderedImage
 import java.io.{ByteArrayOutputStream, InputStream}
 import java.net.URI
-import java.text.{SimpleDateFormat, DateFormat}
+import java.text.{DateFormat, SimpleDateFormat}
 import java.util.Date
 import javax.imageio.ImageIO
+
 import com.google.common.base.CaseFormat
 import com.google.common.io.ByteStreams
 
@@ -23,6 +24,10 @@ package object message {
 
   trait BinaryHeaderValue extends HeaderObject {
     def binarySection: BinarySection
+  }
+
+  object HeaderSpacer extends HeaderObject{
+    def toHeader: String = GntpMessage.SEPARATOR
   }
 
   case class HeaderString(value: String) extends HeaderValue{

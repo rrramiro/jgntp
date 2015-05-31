@@ -2,10 +2,10 @@ package com.google.code.jgntp.internal.io
 
 import java.net._
 import java.util.concurrent._
-import org.slf4j._
+
 import com.google.code.jgntp._
-import com.google.common.base._
 import com.google.common.collect._
+import org.slf4j._
 
 object NioGntpClient {
   private val logger: Logger = LoggerFactory.getLogger(classOf[NioGntpClient])

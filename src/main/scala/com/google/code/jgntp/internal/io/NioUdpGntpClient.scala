@@ -2,13 +2,13 @@ package com.google.code.jgntp.internal.io
 
 import java.net._
 import java.util.concurrent._
+
+import com.google.code.jgntp._
+import com.google.code.jgntp.internal.message._
+import com.google.common.collect._
 import org.jboss.netty.bootstrap._
 import org.jboss.netty.channel.socket._
 import org.jboss.netty.channel.socket.oio._
-import com.google.code.jgntp._
-import com.google.code.jgntp.internal.message._
-import com.google.common.base._
-import com.google.common.collect._
 
 object NioUdpGntpClient {
   private val notificationsSent: BiMap[Long, AnyRef] = HashBiMap.create[Long, AnyRef]
@@ -17,7 +17,7 @@ object NioUdpGntpClient {
 class NioUdpGntpClient(applicationInfo: GntpApplicationInfo, growlAddress: SocketAddress, executor: Executor, password: GntpPassword) extends NioGntpClient(applicationInfo, growlAddress, password) {
   assert(executor != null, "Executor must not be null")
   private final val bootstrap: ConnectionlessBootstrap = new ConnectionlessBootstrap(new OioDatagramChannelFactory(executor))
-  bootstrap.setPipelineFactory(new GntpChannelPipelineFactory(new GntpChannelHandler(this, null)))
+  bootstrap.setPipelineFactory(new GntpChannelPipelineFactory(new GntpChannelHandler(this, None)))
   bootstrap.setOption("broadcast", "false")
 
   private final val datagramChannel: DatagramChannel = bootstrap.bind(new InetSocketAddress(0)).asInstanceOf[DatagramChannel]
