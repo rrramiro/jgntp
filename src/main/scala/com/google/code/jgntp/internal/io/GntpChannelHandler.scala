@@ -6,7 +6,6 @@ import java.net._
 import com.google.code.jgntp._
 import com.google.code.jgntp.internal.message._
 import com.google.code.jgntp.internal.{GntpCallbackResult, GntpErrorStatus, GntpMessageType}
-import com.google.common.base._
 import org.jboss.netty.channel._
 import org.slf4j._
 
@@ -47,10 +46,10 @@ class GntpChannelHandler(gntpClient: NioGntpClient, listener: Option[GntpListene
   }
 
   protected def handleMessage(message: GntpMessageResponse) {
-    Preconditions.checkState(message.isInstanceOf[GntpOkMessage] || message.isInstanceOf[GntpCallbackMessage] || message.isInstanceOf[GntpErrorMessage])
+    assert(message.isInstanceOf[GntpOkMessage] || message.isInstanceOf[GntpCallbackMessage] || message.isInstanceOf[GntpErrorMessage])
     logger.debug("handling message...")
     if (gntpClient.isRegistered) {
-      Option(gntpClient.getNotificationsSent.get(message.internalNotificationId))
+      gntpClient.notificationsSent.get(message.internalNotificationId)
         .fold(logger.debug("notification is null. Not much we can do now..."))
       { case notification: GntpNotification =>
         message match {
@@ -59,13 +58,13 @@ class GntpChannelHandler(gntpClient: NioGntpClient, listener: Option[GntpListene
             try {
               listener.foreach(_.onNotificationSuccess(notification))
             } finally {
-              if (notification.callbackTarget.isDefined) {
-                gntpClient.getNotificationsSent.remove(message.internalNotificationId)
+              notification.callbackTarget.foreach { callback =>
+                gntpClient.notificationsSent.remove(message.internalNotificationId)
               }
             }
           case callbackMessage: GntpCallbackMessage =>
             logger.debug("Callback - message.")
-            gntpClient.getNotificationsSent.remove(callbackMessage.internalNotificationId)
+            gntpClient.notificationsSent.remove(callbackMessage.internalNotificationId)
             listener.fold(throw new IllegalStateException("A GntpListener must be set in GntpClient to be able to receive callbacks")) { listener =>
               callbackMessage.callbackResult match {
                 case GntpCallbackResult.CLICK | GntpCallbackResult.CLICKED =>

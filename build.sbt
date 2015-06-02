@@ -1,9 +1,9 @@
 
 scalaVersion := "2.11.6"
 
-organization := "com.google.code.jgntp"
+organization := "com.google.code.sgntp"
 
-name := "jgntp"
+name := "sgntp"
 
 version := "1.2.2-SNAPSHOT"
 

@@ -3,6 +3,7 @@ package com.google.code.jgntp
 
 import java.awt.image.RenderedImage
 import java.net.URI
+import java.nio.charset.StandardCharsets
 import java.security._
 import javax.crypto.spec.{DESKeySpec, IvParameterSpec}
 import javax.crypto.{Cipher, SecretKeyFactory}
@@ -10,7 +11,6 @@ import javax.crypto.{Cipher, SecretKeyFactory}
 import com.google.code.jgntp.internal.Priority.Priority
 import com.google.code.jgntp.internal.message.HeaderObject
 import com.google.code.jgntp.util.Hex
-import com.google.common.base.Charsets
 
 case class GntpApplicationInfo(name: String,
                                icon: Option[Either[URI, RenderedImage]],
@@ -30,7 +30,6 @@ case class GntpNotification(applicationName: String,
                             id: Option[String] = None,
                             sticky: Option[Boolean] = None,
                             priority: Option[Priority] = None,
-                            context: Option[AnyRef] = None, //TODO remove
                             coalescingId: Option[String] = None,
                             headers: Seq[(String, HeaderObject)])
 
@@ -51,13 +50,12 @@ case class GntpPassword(textPassword: String = "",
                         hashAlgorithm: String = GntpPassword.DEFAULT_KEY_HASH_ALGORITHM,
                         randomSaltAlgorithm: String = GntpPassword.DEFAULT_RANDOM_SALT_ALGORITHM) {
   private val _salt: Seq[Byte] = getSalt
-  private val _key = hash(textPassword.getBytes(Charsets.UTF_8).toSeq ++ _salt)
+  private val _key = hash(textPassword.getBytes(StandardCharsets.UTF_8).toSeq ++ _salt)
   private val _secretKey = SecretKeyFactory.getInstance(GntpPassword.DEFAULT_ALGORITHM).generateSecret(new DESKeySpec(_key.toArray))
   val salt: String = Hex.toHexadecimal(_salt.toArray)
   val keyHash: String = Hex.toHexadecimal(hash(_key).toArray)
   val keyHashAlgorithm: String = hashAlgorithm.replaceAll("-", "")
   private val _iv = new IvParameterSpec(_secretKey.getEncoded)
-  val iv: String = new String(_iv.getIV)
   private val _cipher = Cipher.getInstance(GntpPassword.DEFAULT_TRANSFORMATION)
   _cipher.init(Cipher.ENCRYPT_MODE, _secretKey, _iv)
 

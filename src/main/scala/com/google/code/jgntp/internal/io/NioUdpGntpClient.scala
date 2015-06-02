@@ -10,8 +10,10 @@ import org.jboss.netty.bootstrap._
 import org.jboss.netty.channel.socket._
 import org.jboss.netty.channel.socket.oio._
 
+import scala.collection.mutable
+
 object NioUdpGntpClient {
-  private val notificationsSent: BiMap[Long, AnyRef] = HashBiMap.create[Long, AnyRef]
+  private val notificationsSent: mutable.Map[Long, AnyRef] = new mutable.HashMap[Long, AnyRef]
 }
 
 class NioUdpGntpClient(applicationInfo: GntpApplicationInfo, growlAddress: SocketAddress, executor: Executor, password: GntpPassword) extends NioGntpClient(applicationInfo, growlAddress, password) {
@@ -40,7 +42,7 @@ class NioUdpGntpClient(applicationInfo: GntpApplicationInfo, growlAddress: Socke
     bootstrap.releaseExternalResources
   }
 
-  private[io] def getNotificationsSent: BiMap[Long, AnyRef] = NioUdpGntpClient.notificationsSent
+  val notificationsSent: mutable.Map[Long, AnyRef] = NioUdpGntpClient.notificationsSent
 
-  private[io] def retryRegistration {}
+  def retryRegistration {}
 }

@@ -1,18 +1,19 @@
 package com.google.code.jgntp.internal.io
 
 import java.net._
-import java.util._
-import java.util.concurrent._
-import java.util.concurrent.atomic._
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit, Executor}
+import scala.collection.concurrent.{TrieMap, Map}
 
 import com.google.code.jgntp._
 import com.google.code.jgntp.internal.message._
-import com.google.common.collect._
 import org.jboss.netty.bootstrap._
 import org.jboss.netty.channel._
 import org.jboss.netty.channel.group._
 import org.jboss.netty.channel.socket.nio._
 import org.slf4j._
+
+import scala.collection.mutable
 
 object NioTcpGntpClient {
   private val logger: Logger = LoggerFactory.getLogger(classOf[NioTcpGntpClient])
@@ -44,8 +45,8 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
   @volatile
   private var tryingRegistration: Boolean = false
   private final val notificationIdGenerator: AtomicLong = new AtomicLong
-  private final val notificationsSent: BiMap[Long, AnyRef] = HashBiMap.create[Long, AnyRef]
-  private final val notificationRetries: Map[GntpNotification, Integer] = Maps.newConcurrentMap[GntpNotification, Integer]
+  val notificationsSent: mutable.Map[Long, AnyRef] = new mutable.HashMap[Long, AnyRef]
+  val notificationRetries: Map[GntpNotification, Integer] = new TrieMap[GntpNotification, Integer]
 
 
   protected def doRegister {
@@ -75,7 +76,7 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
         }
         else {
           if (retryExecutorService != null) {
-            var count: Integer = notificationRetries.get(notification)
+            var count: Integer = notificationRetries(notification)
             if (count == null) {
               count = 1
             }
@@ -95,7 +96,9 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
               notificationRetries.remove(notification)
             }
           }
-          notificationsSent.inverse.remove(notification)
+          notificationsSent.find(_._2 == notification).foreach( entity =>
+            notificationsSent.remove(entity._1)
+          )
         }
       }
     })
@@ -111,11 +114,9 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
     bootstrap.releaseExternalResources()
   }
 
-  private[io] def getNotificationsSent: BiMap[Long, AnyRef] = {
-    notificationsSent
-  }
 
-  private[io] def retryRegistration {
+
+  def retryRegistration {
     if (retryExecutorService != null && !tryingRegistration) {
       tryingRegistration = true
       NioTcpGntpClient.logger.info("Scheduling registration retry in [{}-{}]", retryTime, retryTimeUnit)

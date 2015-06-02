@@ -4,8 +4,9 @@ import java.net._
 import java.util.concurrent._
 
 import com.google.code.jgntp._
-import com.google.common.collect._
 import org.slf4j._
+
+import scala.collection.mutable
 
 object NioGntpClient {
   private val logger: Logger = LoggerFactory.getLogger(classOf[NioGntpClient])
@@ -30,9 +31,9 @@ abstract class NioGntpClient(val applicationInfo: GntpApplicationInfo, val growl
   @throws(classOf[InterruptedException])
   protected def doShutdown(timeout: Long, unit: TimeUnit)
 
-  private[io] def getNotificationsSent: BiMap[Long, AnyRef]
+  val notificationsSent: mutable.Map[Long, AnyRef]
 
-  private[io] def retryRegistration
+  def retryRegistration
 
   def register {
     if (closed) {

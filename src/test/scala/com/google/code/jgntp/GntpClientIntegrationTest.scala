@@ -30,13 +30,13 @@ object GntpClientIntegrationTest {
       logger.info("Notification success: " + notification)
     }
     def onClickCallback(notification: GntpNotification) {
-      logger.info("Click callback: " + notification.context)
+      logger.info("Click callback: " + notification.id)
     }
     def onCloseCallback(notification: GntpNotification) {
-      logger.info("Close callback: " + notification.context)
+      logger.info("Close callback: " + notification.id)
     }
     def onTimeoutCallback(notification: GntpNotification) {
-      logger.info("Timeout callback: " + notification.context)
+      logger.info("Timeout callback: " + notification.id)
     }
     def onRegistrationError(status: GntpErrorStatus, description: String) {
       logger.info("Registration Error: " + status + " - desc: " + description)
@@ -75,8 +75,7 @@ class GntpClientIntegrationTest {
       "Title",
       Some("Message"),
       None,
-      headers = Seq(GntpScala.APP_SPECIFIC_HEADER_PREFIX + "Filename" -> "file.txt"),
-      context = Some(12345.asInstanceOf[AnyRef])
+      headers = Seq(GntpScala.APP_SPECIFIC_HEADER_PREFIX + "Filename" -> "file.txt")
     ), 5, SECONDS)
 
     client.notify(GntpNotification(
