@@ -49,7 +49,7 @@ class GntpChannelHandler(gntpClient: NioGntpClient, listener: Option[GntpListene
     assert(message.isInstanceOf[GntpOkMessage] || message.isInstanceOf[GntpCallbackMessage] || message.isInstanceOf[GntpErrorMessage])
     logger.debug("handling message...")
     if (gntpClient.isRegistered) {
-      gntpClient.notificationsSent.get(message.internalNotificationId)
+      gntpClient.notificationsSent.get(message.internalNotificationId) //TODO notificationsSent always empty ?
         .fold(logger.debug("notification is null. Not much we can do now..."))
       { case notification: GntpNotification =>
         message match {

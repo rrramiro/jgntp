@@ -1,11 +1,11 @@
 package com.google.code.jgntp.internal.io
 
 import java.io._
+import java.nio.file.{Paths, Files}
 import java.util.concurrent.atomic._
 
 import com.google.code.jgntp.internal.message._
 import com.google.code.jgntp.internal.message.read._
-import com.google.common.io._
 import org.jboss.netty.buffer._
 import org.jboss.netty.channel.ChannelHandler._
 import org.jboss.netty.channel._
@@ -29,7 +29,7 @@ class GntpMessageDecoder extends OneToOneDecoder {
   if (dumpDir != null) {
     dumpCounter = new AtomicLong
     try {
-      Files.createParentDirs(dumpDir)
+      dumpDir.mkdirs()
     }
     catch {
       case e: IOException => {
@@ -52,14 +52,13 @@ class GntpMessageDecoder extends OneToOneDecoder {
     if (dumpDir != null) {
       try {
         val fileName: String = "gntp-response-" + dumpCounter.getAndIncrement + ".out"
-        Files.write(b, new File(dumpDir, fileName))
+        Files.write(Paths.get(new File(dumpDir, fileName).toURI), b)
       }
       catch {
-        case e: IOException => {
+        case e: IOException =>
           GntpMessageDecoder.logger.warn("Could not save GNTP request dump", e)
-        }
       }
     }
-    return parser.parse(s)
+    parser.parse(s)
   }
 }

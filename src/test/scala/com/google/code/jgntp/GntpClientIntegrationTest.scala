@@ -8,9 +8,10 @@ import javax.imageio._
 
 import com.google.code.jgntp.internal.GntpErrorStatus.GntpErrorStatus
 import com.google.code.jgntp.internal.message._
-import com.google.common.io._
 import org.junit._
 import org.slf4j._
+
+import scala.util.Try
 
 object GntpClientIntegrationTest {
   val APPLICATION_ICON: String = "app-icon.png"
@@ -102,7 +103,7 @@ class GntpClientIntegrationTest {
     try {
       ImageIO.read(is)
     } finally {
-      Closeables.closeQuietly(is)
+      Try(is.close())
     }
   }
 }

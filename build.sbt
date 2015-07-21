@@ -20,7 +20,7 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.1" % "test",
   "org.slf4j" % "slf4j-api" % "1.6.1",
   "org.slf4j" % "slf4j-log4j12" % "1.6.1",
-  "com.google.guava" % "guava" % "10.0.1",
+  //"com.google.guava" % "guava" % "10.0.1",
   "org.jboss.netty" % "netty" % "3.2.6.Final",
   "commons-io" % "commons-io" % "2.4",
   //"io.reactivex" %% "rxscala" % "0.24.1",

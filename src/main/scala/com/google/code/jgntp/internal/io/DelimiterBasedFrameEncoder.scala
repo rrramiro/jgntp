@@ -1,9 +1,9 @@
 package com.google.code.jgntp.internal.io
 
 import java.io._
+import java.nio.file.{Paths, Path, Files}
 import java.util.concurrent.atomic._
 
-import com.google.common.io._
 import org.jboss.netty.buffer.ChannelBuffers.copiedBuffer
 import org.jboss.netty.buffer._
 import org.jboss.netty.channel.ChannelHandler._
@@ -27,7 +27,7 @@ import org.slf4j._
   if (dumpDir != null) {
     dumpCounter = new AtomicLong
     try {
-      Files.createParentDirs(dumpDir)
+      dumpDir.mkdirs()
     }
     catch {
       case e: IOException => {
@@ -49,7 +49,7 @@ import org.slf4j._
         val fileName: String = "gntp-request-" + dumpCounter.getAndIncrement + ".out"
         val b: Array[Byte] = new Array[Byte](buffer.readableBytes)
         buffer.getBytes(0, b)
-        Files.write(b, new File(dumpDir, fileName))
+        Files.write(Paths.get(new File(dumpDir, fileName).toURI), b)
       }
       catch {
         case e: IOException => {
@@ -57,7 +57,7 @@ import org.slf4j._
         }
       }
     }
-    return buffer
+    buffer
   }
 }
 

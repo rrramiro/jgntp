@@ -5,7 +5,6 @@ import java.util.concurrent._
 
 import com.google.code.jgntp._
 import com.google.code.jgntp.internal.message._
-import com.google.common.collect._
 import org.jboss.netty.bootstrap._
 import org.jboss.netty.channel.socket._
 import org.jboss.netty.channel.socket.oio._
@@ -28,7 +27,7 @@ class NioUdpGntpClient(applicationInfo: GntpApplicationInfo, growlAddress: Socke
   protected def doRegister {
     val message: GntpMessage = new GntpRegisterMessage(applicationInfo, password)
     datagramChannel.write(message, growlAddress)
-    registrationLatch.countDown
+    registrationLatch.countDown()
   }
 
   protected def doNotify(notification: GntpNotification) {
@@ -39,7 +38,7 @@ class NioUdpGntpClient(applicationInfo: GntpApplicationInfo, growlAddress: Socke
   @throws(classOf[InterruptedException])
   protected def doShutdown(timeout: Long, unit: TimeUnit) {
     datagramChannel.close.await(timeout, unit)
-    bootstrap.releaseExternalResources
+    bootstrap.releaseExternalResources()
   }
 
   val notificationsSent: mutable.Map[Long, AnyRef] = NioUdpGntpClient.notificationsSent

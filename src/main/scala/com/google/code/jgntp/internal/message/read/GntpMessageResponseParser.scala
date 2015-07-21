@@ -1,6 +1,5 @@
 package com.google.code.jgntp.internal.message.read
 
-import java.lang.Iterable
 import java.text._
 import java.util.Date
 
@@ -8,14 +7,10 @@ import com.google.code.jgntp.internal.GntpMessageHeader.GntpMessageHeader
 import com.google.code.jgntp.internal.GntpMessageType._
 import com.google.code.jgntp.internal.{GntpMessageType, _}
 import com.google.code.jgntp.internal.message._
-import com.google.common.base._
-import com.google.common.collect._
 
 import scala.util.{Failure, Success, Try}
 
 class GntpMessageResponseParser {
-  private val separatorSplitter: Splitter = Splitter.on(GntpMessage.SEPARATOR).omitEmptyStrings
-  private val statusLineSplitter: Splitter = Splitter.on(' ').omitEmptyStrings.trimResults
   private val dateFormats = Seq(
     GntpMessage.DATE_TIME_FORMAT,
     GntpMessage.DATE_TIME_FORMAT_ALTERNATE,
@@ -23,17 +18,17 @@ class GntpMessageResponseParser {
   )
 
   def parse(s: String): GntpMessageResponse = {
-    val splitted: Iterable[String] = separatorSplitter.split(s)
-    assert(!Iterables.isEmpty(splitted), "Empty message received from Growl")
-    val iter: java.util.Iterator[String] = splitted.iterator
-    val statusLine: String = iter.next
+    val splitted: Array[String] = s.split(GntpMessage.SEPARATOR)//separatorSplitter.split(s)
+    assert(splitted.nonEmpty, "Empty message received from Growl")
+    val iter: Iterator[String] = splitted.iterator
+    val statusLine: String = iter.next()
     assert(statusLine.startsWith(GntpMessage.PROTOCOL_ID + "/" + GntpMessage.VERSION), "Unknown protocol version")
-    val statusLineIterable: Iterable[String] = statusLineSplitter.split(statusLine)
-    val messageTypeText: String = Iterables.get(statusLineIterable, 1).substring(1)
+    val statusLineIterable: Array[String] = statusLine.split(' ')//statusLineSplitter.split(statusLine)
+    val messageTypeText: String = statusLineIterable(1).substring(1)
     val messageType: GntpMessageType = GntpMessageType.withName(messageTypeText)
     val headers = new collection.mutable.HashMap[String, String]
     while (iter.hasNext) {
-      val splittedHeader: Array[String] = iter.next.split(":", 2)
+      val splittedHeader: Array[String] = iter.next().split(":", 2)
       headers.put(splittedHeader(0), splittedHeader(1).trim)
     }
     messageType match {

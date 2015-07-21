@@ -1,8 +1,10 @@
 package com.google.code.jgntp.internal.message
 
 import java.nio.charset._
+import java.security.MessageDigest
 
 import com.google.code.jgntp.internal.GntpMessageType._
+import com.google.code.jgntp.util.Hex
 
 object GntpMessage {
   val PROTOCOL_ID: String = "GNTP"
@@ -18,9 +20,20 @@ object GntpMessage {
   val IMAGE_FORMAT: String = "png"
   val BINARY_SECTION_ID: String = "Identifier:"
   val BINARY_SECTION_LENGTH: String = "Length:"
-
+  val BINARY_SECTION_PREFIX: String = "x-growl-resource://"
 }
 
 class GntpMessage(val `type`: GntpMessageType)
+
+case class BinarySection(data: Array[Byte]) {
+  //TODO Move to GntpSecurity
+  val id = {
+    val digest = MessageDigest.getInstance(GntpMessage.BINARY_HASH_FUNCTION)
+    digest.update(data)
+    Hex.toHexadecimal(digest.digest)
+  }
+
+  val gntpId = GntpMessage.BINARY_SECTION_PREFIX + id
+}
 
 

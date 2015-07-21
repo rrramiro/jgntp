@@ -1,15 +1,19 @@
 package com.google.code.jgntp.internal
 
 import java.awt.image.RenderedImage
-import java.io.{ByteArrayOutputStream, InputStream}
+import java.io.{FileInputStream, BufferedInputStream, ByteArrayOutputStream, InputStream}
 import java.net.URI
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Paths, Files}
+import java.security.MessageDigest
 import java.text.{DateFormat, SimpleDateFormat}
 import java.util.Date
 import javax.imageio.ImageIO
 
-import com.google.common.base.CaseFormat
-import com.google.common.io.ByteStreams
+import com.google.code.jgntp.util.Hex
 
+import scala.collection.mutable.ListBuffer
+import scala.io.{Codec, Source}
 import scala.language.implicitConversions
 
 package object message {
@@ -37,7 +41,7 @@ package object message {
     override def toHeader = value.toString
   }
   case class HeaderBoolean(value: Boolean) extends HeaderValue{
-    override def toHeader = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, value.toString)
+    override def toHeader = value.toString.toLowerCase.capitalize
   }
   case class HeaderDate(value: Date) extends HeaderValue{
     override def toHeader = dateFormat.format(value)
@@ -46,7 +50,11 @@ package object message {
     override def toHeader = value.toString
   }
   case class HeaderInputStream(value: InputStream) extends BinaryHeaderValue{
-    val binarySection = new BinarySection(ByteStreams.toByteArray(value))
+    val binarySection = new BinarySection(Stream.continually(value.read)
+      .takeWhile(_ != -1)
+      .map(_.toByte).toArray)
+    value.close() //TODO check
+
     override def toHeader = binarySection.gntpId
   }
   case class HeaderArrayBytes(value: Array[Byte]) extends BinaryHeaderValue{
