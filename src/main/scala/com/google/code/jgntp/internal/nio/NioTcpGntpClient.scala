@@ -11,10 +11,6 @@ import scala.collection.concurrent.{TrieMap, Map}
 
 import com.google.code.jgntp._
 import com.google.code.jgntp.internal.message._
-//import org.jboss.netty.bootstrap._
-//import org.jboss.netty.channel._
-//import org.jboss.netty.channel.group._
-//import org.jboss.netty.channel.socket.nio._
 
 import org.slf4j._
 
@@ -22,22 +18,18 @@ import org.slf4j._
 import io.netty.bootstrap._
 import io.netty.channel._
 import io.netty.channel.group._
-import io.netty.channel.socket.nio._
-import scala.collection.mutable
 
-object NioTcpGntpClient {
-  private val logger: Logger = LoggerFactory.getLogger(classOf[NioTcpGntpClient])
-}
 
 class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
-                       growlAddress: SocketAddress,
+                       growlHost: InetAddress,
+                       growlPort: Int,
                        executor: Executor,
                        listener: GntpListener,
                        password: GntpPassword,
                        retryTime: Long = 0L,
                        retryTimeUnit: TimeUnit,
-                       notificationRetryCount: Int = 0) extends NioGntpClient(applicationInfo, growlAddress, password) {
-
+                       notificationRetryCount: Int = 0) extends NioGntpClient(applicationInfo, growlHost, growlPort, password) {
+  val logger: Logger = LoggerFactory.getLogger(classOf[NioTcpGntpClient])
   assert(executor != null, "Executor must not be null")
   if (retryTime > 0) {
     assert(retryTimeUnit != null, "Retry time unit must not be null")
@@ -48,10 +40,11 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
   val group = new NioEventLoopGroup()
   private final val bootstrap: Bootstrap = new Bootstrap()
   bootstrap.group(group)
-  bootstrap.remoteAddress(growlAddress)
+  bootstrap.remoteAddress(new InetSocketAddress(growlHost, growlPort))
+
   bootstrap.option(ChannelOption.TCP_NODELAY, true.asInstanceOf[java.lang.Boolean])
   bootstrap.option(ChannelOption.SO_TIMEOUT, new Integer(60 * 1000))
-  bootstrap.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, new DefaultMessageSizeEstimator(1024) )
+  //bootstrap.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, new DefaultMessageSizeEstimator(1024) )
   bootstrap.channel(classOf[NioSocketChannel])
   bootstrap.handler(new GntpChannelPipelineFactory(new GntpChannelHandler(this, Option(listener))))
   //bootstrap.setOption("tcpNoDelay", true)
@@ -68,7 +61,7 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
 
 
   protected def doRegister {
-    bootstrap.connect.addListener(new ChannelFutureListener {
+    bootstrap.connect(growlHost, growlPort).addListener(new ChannelFutureListener {
       @throws(classOf[Exception])
       def operationComplete(future: ChannelFuture) {
         tryingRegistration = false
@@ -99,7 +92,7 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
               count = 1
             }
             if (count <= notificationRetryCount) {
-              NioTcpGntpClient.logger.debug("Failed to send notification [{}], retry [{}/{}] in [{}-{}]", Array(notification, count, notificationRetryCount, retryTime, retryTimeUnit))
+              logger.debug("Failed to send notification [{}], retry [{}/{}] in [{}-{}]", Array(notification, count, notificationRetryCount, retryTime, retryTimeUnit))
               notificationRetries.put(notification, ({
                 count += 1; count
               }))
@@ -110,7 +103,7 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
               }, retryTime, retryTimeUnit)
             }
             else {
-              NioTcpGntpClient.logger.debug("Failed to send notification [{}], giving up", notification)
+              logger.debug("Failed to send notification [{}], giving up", notification)
               notificationRetries.remove(notification)
             }
           }
@@ -139,7 +132,7 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
   def retryRegistration {
     if (retryExecutorService != null && !tryingRegistration) {
       tryingRegistration = true
-      NioTcpGntpClient.logger.info("Scheduling registration retry in [{}-{}]", retryTime, retryTimeUnit)
+      logger.info("Scheduling registration retry in [{}-{}]", retryTime, retryTimeUnit)
       retryExecutorService.schedule( new Runnable {
         def run {
           register

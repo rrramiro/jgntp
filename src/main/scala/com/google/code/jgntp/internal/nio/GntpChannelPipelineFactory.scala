@@ -11,18 +11,18 @@ object GntpChannelPipelineFactory{
 }
 
 class GntpChannelPipelineFactory(handler: GntpChannelHandler) extends ChannelInitializer[SocketChannel] {
+  val delimiterDecoder = new DelimiterBasedFrameDecoder(Integer.MAX_VALUE, GntpChannelPipelineFactory.getDelimiter)
+  val delimiterEncoder = new DelimiterBasedFrameEncoder(GntpChannelPipelineFactory.getDelimiter)
+  val messageDecoder = new GntpMessageDecoder
+  val messageEncoder = new GntpMessageEncoder
 
   @Override
   def initChannel(ch: SocketChannel): Unit = {
     val pipeline = ch.pipeline()
-    pipeline.addLast("delimiter-decoder", new DelimiterBasedFrameDecoder(Integer.MAX_VALUE, GntpChannelPipelineFactory.getDelimiter))
-    pipeline.addLast("delimiter-encoder", new DelimiterBasedFrameEncoder(GntpChannelPipelineFactory.getDelimiter))
-    pipeline.addLast("message-decoder", new GntpMessageDecoder)
-    pipeline.addLast("message-encoder", new GntpMessageEncoder)
+    pipeline.addLast("delimiter-decoder", delimiterDecoder)
+    pipeline.addLast("delimiter-encoder", delimiterEncoder)
+    pipeline.addLast("message-decoder", messageDecoder)
+    pipeline.addLast("message-encoder", messageEncoder)
     pipeline.addLast("handler", handler)
-
   }
-
-
-
 }

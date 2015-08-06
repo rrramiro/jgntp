@@ -10,10 +10,11 @@ import scala.collection.mutable
 object NioGntpClient{
   val notificationsSent: mutable.Map[Long, GntpNotification] = new mutable.HashMap[Long, GntpNotification]
 }
-abstract class NioGntpClient(val applicationInfo: GntpApplicationInfo, val growlAddress: SocketAddress, val password: GntpPassword) extends GntpClient {
+abstract class NioGntpClient(val applicationInfo: GntpApplicationInfo, val growlHost: InetAddress,
+                             val growlPort: Int, val password: GntpPassword) extends GntpClient {
   private val logger: Logger = LoggerFactory.getLogger(classOf[NioGntpClient])
   assert(applicationInfo != null, "Application info must not be null")
-  assert(growlAddress != null, "Address must not be null")
+  assert(growlHost != null, "Address must not be null")
   if (password.encrypted) {
     assert(password.textPassword != null, "Password must not be null if sending encrypted messages") //TODO verify
   }

@@ -3,7 +3,6 @@ package com.google.code.jgntp.internal.io
 import java.io._
 
 import com.google.code.jgntp.internal.message._
-import org.apache.commons.io.output.TeeOutputStream
 import org.jboss.netty.buffer._
 import org.jboss.netty.channel.ChannelHandler._
 import org.jboss.netty.channel._
@@ -17,14 +16,11 @@ import org.slf4j._
   @throws(classOf[Exception])
   override def writeRequested(ctx: ChannelHandlerContext, e: MessageEvent) {
     val message: GntpMessageRequest = e.getMessage.asInstanceOf[GntpMessageRequest]
-    val buffer: ChannelBuffer = ChannelBuffers.dynamicBuffer
+    val buffer = new ByteArrayOutputStream
+    message.append(buffer)
     if (logger.isDebugEnabled) {
-      val debugOutputStream = new ByteArrayOutputStream
-      message.append(new TeeOutputStream(new ChannelBufferOutputStream(buffer), debugOutputStream))
-      logger.debug("Sending message\n{}", new String(debugOutputStream.toByteArray, GntpMessage.ENCODING))
-    } else {
-      message.append(new ChannelBufferOutputStream(buffer))
+      logger.debug("Sending message\n{}", new String(buffer.toByteArray, GntpMessage.ENCODING))
     }
-    Channels.write(ctx, e.getFuture, buffer, e.getRemoteAddress)
+    Channels.write(ctx, e.getFuture, ChannelBuffers.copiedBuffer(buffer.toByteArray), e.getRemoteAddress)
   }
 }

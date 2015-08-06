@@ -16,13 +16,14 @@ import org.slf4j._
 import scala.collection.mutable
 
 class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
-                       growlAddress: SocketAddress,
+                       growlHost: InetAddress,
+                       growlPort: Int,
                        executor: Executor,
                        listener: GntpListener,
                        password: GntpPassword,
                        retryTime: Long = 0L,
                        retryTimeUnit: TimeUnit,
-                       notificationRetryCount: Int = 0) extends NioGntpClient(applicationInfo, growlAddress, password) {
+                       notificationRetryCount: Int = 0) extends NioGntpClient(applicationInfo, growlHost, growlPort, password) {
   private val logger: Logger = LoggerFactory.getLogger(classOf[NioTcpGntpClient])
   assert(executor != null, "Executor must not be null")
   if (retryTime > 0) {
@@ -33,7 +34,7 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
   private final val bootstrap: ClientBootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(executor, executor))
   bootstrap.setPipelineFactory(new GntpChannelPipelineFactory(new GntpChannelHandler(this, Some(listener))))
   bootstrap.setOption("tcpNoDelay", true)
-  bootstrap.setOption("remoteAddress", growlAddress)
+  bootstrap.setOption("remoteAddress", new InetSocketAddress(growlHost, growlPort))
   bootstrap.setOption("soTimeout", 60 * 1000)
   bootstrap.setOption("receiveBufferSizePredictor", new AdaptiveReceiveBufferSizePredictor)
   private final val channelGroup: ChannelGroup = new DefaultChannelGroup("jgntp")

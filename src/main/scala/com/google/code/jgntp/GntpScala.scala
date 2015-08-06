@@ -89,16 +89,16 @@ object GntpScala {
     assert(growlPort > 0, "Port must not be negative")
     assert(retryTime > 0, "Retry time must be greater than zero")
     assert(null != retryTimeUnit, "Retry time unit must not be null")
-    val growlAddress: SocketAddress = new InetSocketAddress(GntpScala.getInetAddress(growlHost), growlPort)
-    if (!tcp && listener != null) {
-      throw new IllegalArgumentException("Cannot set listener on a non-TCP client")
-    }
-    if (tcp) {
-      new NioTcpGntpClient(applicationInfo, growlAddress, executor, listener, password, retryTime, retryTimeUnit, notificationRetryCount)
-    }
-    else {
-      new NioUdpGntpClient(applicationInfo, growlAddress, executor, password)
-    }
+    //val growlAddress: SocketAddress = new InetSocketAddress(GntpScala.getInetAddress(growlHost), growlPort)
+//    if (!tcp && listener != null) {
+//      throw new IllegalArgumentException("Cannot set listener on a non-TCP client")
+//    }
+//    if (tcp) {
+      new NioTcpGntpClient(applicationInfo, GntpScala.getInetAddress(growlHost), growlPort, executor, listener, password, retryTime, retryTimeUnit, notificationRetryCount)
+//    }
+//    else {
+//      new NioUdpGntpClient(applicationInfo, growlAddress, executor, password)
+//    }
   }
 }
 
