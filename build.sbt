@@ -16,10 +16,14 @@ sbtPlugin := true
 //)
 
 libraryDependencies ++= Seq(
+  "org.javassist" % "javassist" % "3.19.0-GA",
+  "io.reactivex" % "rxnetty" % "0.4.11",
+  "io.reactivex" %% "rxscala" % "0.25.0",
   //"com.github.scopt" %% "scopt" % "3.3.0",
   "org.scalatest" %% "scalatest" % "2.2.1" % "test",
-  "org.slf4j" % "slf4j-api" % "1.6.1",
-  "org.slf4j" % "slf4j-log4j12" % "1.6.1",
+  //"org.slf4j" % "slf4j-api" % "1.6.1",
+  "ch.qos.logback" % "logback-classic" % "1.1.3",
+  //"org.slf4j" % "slf4j-log4j12" % "1.6.1",
   //"com.google.guava" % "guava" % "10.0.1",
   "org.jboss.netty" % "netty" % "3.2.6.Final",
   "commons-io" % "commons-io" % "2.4",

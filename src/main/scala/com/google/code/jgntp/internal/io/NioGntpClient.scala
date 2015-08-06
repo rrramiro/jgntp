@@ -7,18 +7,17 @@ import com.google.code.jgntp._
 import org.slf4j._
 
 import scala.collection.mutable
-
-object NioGntpClient {
-  private val logger: Logger = LoggerFactory.getLogger(classOf[NioGntpClient])
+object NioGntpClient{
+  val notificationsSent: mutable.Map[Long, GntpNotification] = new mutable.HashMap[Long, GntpNotification]
 }
-
 abstract class NioGntpClient(val applicationInfo: GntpApplicationInfo, val growlAddress: SocketAddress, val password: GntpPassword) extends GntpClient {
+  private val logger: Logger = LoggerFactory.getLogger(classOf[NioGntpClient])
   assert(applicationInfo != null, "Application info must not be null")
   assert(growlAddress != null, "Address must not be null")
   if (password.encrypted) {
     assert(password.textPassword != null, "Password must not be null if sending encrypted messages") //TODO verify
   }
-
+  val notificationsSent = NioGntpClient.notificationsSent
   val registrationLatch: CountDownLatch = new CountDownLatch(1)
   @volatile
   var closed: Boolean = false
@@ -31,7 +30,7 @@ abstract class NioGntpClient(val applicationInfo: GntpApplicationInfo, val growl
   @throws(classOf[InterruptedException])
   protected def doShutdown(timeout: Long, unit: TimeUnit)
 
-  val notificationsSent: mutable.Map[Long, AnyRef]
+
 
   def retryRegistration
 
@@ -39,13 +38,13 @@ abstract class NioGntpClient(val applicationInfo: GntpApplicationInfo, val growl
     if (closed) {
       throw new IllegalStateException("GntpClient has been shutdown")
     }
-    NioGntpClient.logger.debug("Registering GNTP application [{}]", applicationInfo)
+    logger.debug("Registering GNTP application [{}]", applicationInfo)
     doRegister
   }
 
   def isRegistered: Boolean = {
     val isRegistered: Boolean = registrationLatch.getCount == 0 && !closed
-    NioGntpClient.logger.debug("checking if the [{}] application is registered. Registered = {}", applicationInfo, isRegistered)
+    logger.debug("checking if the [{}] application is registered. Registered = {}", applicationInfo, isRegistered)
     isRegistered
   }
 
@@ -77,7 +76,7 @@ abstract class NioGntpClient(val applicationInfo: GntpApplicationInfo, val growl
       notifyInternal(notification)
       return true
     }
-    return false
+    false
   }
 
   @throws(classOf[InterruptedException])
@@ -89,7 +88,7 @@ abstract class NioGntpClient(val applicationInfo: GntpApplicationInfo, val growl
 
   protected def notifyInternal(notification: GntpNotification) {
     if (!closed) {
-      NioGntpClient.logger.debug("Sending notification [{}]", notification)
+      logger.debug("Sending notification [{}]", notification)
       doNotify(notification)
     }
   }

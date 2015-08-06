@@ -10,7 +10,8 @@ import org.jboss.netty.buffer.{ChannelBufferOutputStream, ChannelBuffers, Channe
 import scala.language.implicitConversions
 
 
-abstract class GntpMessageRequest(`type`: GntpMessageType, password: GntpPassword) extends GntpMessage(`type`){
+abstract class GntpMessageRequest(val `type`: GntpMessageType,
+                                  password: GntpPassword) extends GntpMessage{
   val allHeaders: Seq[(String, HeaderObject)]
 
   def append(output: OutputStream) {

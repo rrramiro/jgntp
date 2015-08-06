@@ -7,7 +7,8 @@ import com.google.code.jgntp.internal.GntpMessageHeader.GntpMessageHeader
 import com.google.code.jgntp.internal.GntpMessageType._
 import com.google.code.jgntp.internal.{GntpMessageType, _}
 import com.google.code.jgntp.internal.message._
-
+import com.google.code.jgntp.internal.GntpErrorStatus._
+import com.google.code.jgntp.internal.GntpCallbackResult._
 import scala.util.{Failure, Success, Try}
 
 class GntpMessageResponseParser {
@@ -45,52 +46,66 @@ class GntpMessageResponseParser {
 
   private def createOkMessage(headers: Map[String, String]): GntpOkMessage = {
     new GntpOkMessage(
-      headers.get(GntpMessageHeader.NOTIFICATION_INTERNAL_ID.toString).fold(-1L)(_.toLong),
-      getRespondingType(headers),
-      headers.getOrElse(GntpMessageHeader.NOTIFICATION_ID.toString, null)
+      headers.getNotificationInternalId,
+      headers.getRespondingType,
+      headers.getNotificationId
     )
   }
 
   private def createCallbackMessage(headers: Map[String, String]): GntpCallbackMessage = {
     new GntpCallbackMessage(
-      headers.get(GntpMessageHeader.NOTIFICATION_INTERNAL_ID.toString).fold(-1L)(_.toLong),
-      headers.getOrElse(GntpMessageHeader.NOTIFICATION_ID.toString, null),
-      GntpCallbackResult.withName(headers.getRequiredValue(GntpMessageHeader.NOTIFICATION_CALLBACK_RESULT)),
-      headers.getRequiredValue(GntpMessageHeader.NOTIFICATION_CALLBACK_CONTEXT),
-      headers.getRequiredValue(GntpMessageHeader.NOTIFICATION_CALLBACK_CONTEXT_TYPE),
-      parseTimestamp(headers.getRequiredValue(GntpMessageHeader.NOTIFICATION_CALLBACK_TIMESTAMP), dateFormats)
+      headers.getNotificationInternalId,
+      headers.getNotificationId,
+      headers.getNotificationCallbackResult,
+      headers.getNotificationCallbackContext,
+      headers.getNotificationCallbackContextType,
+      headers.getNotificationCallbackTimestamp
     )
   }
 
   private def createErrorMessage(headers: Map[String, String]): GntpErrorMessage = {
     new GntpErrorMessage(
-      headers.get(GntpMessageHeader.NOTIFICATION_INTERNAL_ID.toString).fold(-1L)(_.toLong),
-      getRespondingType(headers),
-      GntpErrorStatus(headers.getRequiredValue(GntpMessageHeader.ERROR_CODE).toInt),
-      headers.getRequiredValue(GntpMessageHeader.ERROR_DESCRIPTION)
+      headers.getNotificationInternalId,
+      headers.getRespondingType,
+      headers.getErrorCode,
+      headers.getErrorDescription
     )
   }
 
-  protected def getRespondingType(headers: Map[String, String]): GntpMessageType = {
-    headers.get(GntpMessageHeader.RESPONSE_ACTION.toString).fold(null.asInstanceOf[GntpMessageType])(respondingTypeName => GntpMessageType.withName(respondingTypeName))
-  }
 
   implicit class HeaderMapWrapper(headers: Map[String, String]){
-    def getRequiredValue(gntpMessageHeader: GntpMessageHeader): String = {
-      headers.getOrElse(gntpMessageHeader.toString, throw new RuntimeException(s"Required header ${gntpMessageHeader.toString} not found"))
+    private def getRequiredValue(gntpMessageHeader: GntpMessageHeader): String = headers.getOrElse(gntpMessageHeader.toString, throw new RuntimeException(s"Required header ${gntpMessageHeader.toString} not found"))
+
+    def getRespondingType: GntpMessageType = GntpMessageType.withName(getRequiredValue(GntpMessageHeader.RESPONSE_ACTION))
+
+    def getNotificationInternalId: Option[Long] = headers.get(GntpMessageHeader.NOTIFICATION_INTERNAL_ID.toString).map(_.toLong)
+
+    def getNotificationId: Option[String] = headers.get(GntpMessageHeader.NOTIFICATION_ID.toString)
+
+    def getErrorCode: GntpErrorStatus = GntpErrorStatus(getRequiredValue(GntpMessageHeader.ERROR_CODE).toInt)
+
+    def getErrorDescription: String = getRequiredValue(GntpMessageHeader.ERROR_DESCRIPTION)
+
+    def getNotificationCallbackResult: GntpCallbackResult = GntpCallbackResult.withName(getRequiredValue(GntpMessageHeader.NOTIFICATION_CALLBACK_RESULT))
+
+    def getNotificationCallbackContext: String = getRequiredValue(GntpMessageHeader.NOTIFICATION_CALLBACK_CONTEXT)
+
+    def getNotificationCallbackContextType: String = getRequiredValue(GntpMessageHeader.NOTIFICATION_CALLBACK_CONTEXT_TYPE)
+
+    def getNotificationCallbackTimestamp: Date = parseTimestamp(getRequiredValue(GntpMessageHeader.NOTIFICATION_CALLBACK_TIMESTAMP), dateFormats)
+
+
+    private def parseTimestamp(timestampText: String, dateFormats: Seq[String]): Date = {
+      dateFormats match {
+        case format :: tail =>
+          Try(new SimpleDateFormat(format).parse(timestampText)) match {
+            case Failure(e) => parseTimestamp(timestampText, tail)
+            case Success(timestamp) => timestamp
+          }
+        case Nil =>
+          throw new RuntimeException("Timestamp Bad Format")
+      }
     }
   }
 
-
-  private def parseTimestamp(timestampText: String, dateFormats: Seq[String]): Date = {
-    dateFormats match {
-      case format :: tail =>
-        Try(new SimpleDateFormat(format).parse(timestampText)) match {
-          case Failure(e) => parseTimestamp(timestampText, tail)
-          case Success(timestamp) => timestamp
-        }
-      case Nil =>
-        throw new RuntimeException("Timestamp Bad Format")
-    }
-  }
 }

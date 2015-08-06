@@ -34,18 +34,14 @@ object GntpScala {
 
 
   private def getTcpPort: Int = {
-    var osName: String = System.getProperty("os.name")
-    if (osName != null) {
-      osName = osName.toLowerCase
-      if (osName.contains("mac")) {
-        GntpScala.logger.debug("using mac port number: " + GntpScala.MAC_TCP_PORT)
-        return GntpScala.MAC_TCP_PORT
-      }
-      else {
-        GntpScala.logger.debug("using the windows port for growl")
-      }
+    val osName: String = System.getProperty("os.name")
+    if (osName != null && osName.toLowerCase.contains("mac")) {
+      GntpScala.logger.debug("using mac port number: " + GntpScala.MAC_TCP_PORT)
+      GntpScala.MAC_TCP_PORT
+    } else {
+      GntpScala.logger.debug("using the windows port for growl")
+      GntpScala.WINDOWS_TCP_PORT
     }
-    GntpScala.WINDOWS_TCP_PORT
   }
 
 
@@ -78,10 +74,10 @@ object GntpScala {
   }
 
   def apply(applicationInfo: GntpApplicationInfo,
-            growlHost: String = null,
+            growlHost: String,
             growlPort: Int = GntpScala.getTcpPort, //UDP
             tcp: Boolean = true,
-            executor: Executor = null,
+            executor: Executor = Executors.newCachedThreadPool,
             listener: GntpListener = null,
             password: GntpPassword = null,
             retryTime: Long = GntpScala.DEFAULT_RETRY_TIME, //0
@@ -97,12 +93,11 @@ object GntpScala {
     if (!tcp && listener != null) {
       throw new IllegalArgumentException("Cannot set listener on a non-TCP client")
     }
-    val executorToUse: Executor = if (executor == null) Executors.newCachedThreadPool else executor
     if (tcp) {
-      new NioTcpGntpClient(applicationInfo, growlAddress, executorToUse, listener, password, retryTime, retryTimeUnit, notificationRetryCount)
+      new NioTcpGntpClient(applicationInfo, growlAddress, executor, listener, password, retryTime, retryTimeUnit, notificationRetryCount)
     }
     else {
-      new NioUdpGntpClient(applicationInfo, growlAddress, executorToUse, password)
+      new NioUdpGntpClient(applicationInfo, growlAddress, executor, password)
     }
   }
 }

@@ -43,6 +43,13 @@ object GntpPassword {
   val DEFAULT_ALGORITHM: String = "DES"
   val DEFAULT_TRANSFORMATION: String = "DES/CBC/PKCS5Padding"
   val NONE_ENCRYPTION_ALGORITHM: String = "NONE"
+  val BINARY_HASH_FUNCTION: String = "MD5"
+
+  def binaryHash(data: Array[Byte]){
+    val digest = MessageDigest.getInstance(BINARY_HASH_FUNCTION)
+    digest.update(data)
+    Hex.toHexadecimal(digest.digest)
+  }
 }
 
 case class GntpPassword(textPassword: String = "",

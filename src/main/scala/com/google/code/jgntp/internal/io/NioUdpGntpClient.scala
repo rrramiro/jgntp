@@ -11,9 +11,6 @@ import org.jboss.netty.channel.socket.oio._
 
 import scala.collection.mutable
 
-object NioUdpGntpClient {
-  private val notificationsSent: mutable.Map[Long, AnyRef] = new mutable.HashMap[Long, AnyRef]
-}
 
 class NioUdpGntpClient(applicationInfo: GntpApplicationInfo, growlAddress: SocketAddress, executor: Executor, password: GntpPassword) extends NioGntpClient(applicationInfo, growlAddress, password) {
   assert(executor != null, "Executor must not be null")
@@ -40,8 +37,6 @@ class NioUdpGntpClient(applicationInfo: GntpApplicationInfo, growlAddress: Socke
     datagramChannel.close.await(timeout, unit)
     bootstrap.releaseExternalResources()
   }
-
-  val notificationsSent: mutable.Map[Long, AnyRef] = NioUdpGntpClient.notificationsSent
 
   def retryRegistration {}
 }
