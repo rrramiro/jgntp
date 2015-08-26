@@ -6,50 +6,52 @@ import java.net._
 import com.google.code.jgntp._
 import com.google.code.jgntp.internal.message._
 import com.google.code.jgntp.internal.{GntpCallbackResult, GntpErrorStatus, GntpMessageType}
-import org.jboss.netty.channel._
+import io.netty.channel.ChannelHandler.Sharable
+import io.netty.channel.{SimpleChannelInboundHandler, _}
 import org.slf4j._
 
-class GntpChannelHandler(gntpClient: NioGntpClient, listener: Option[GntpListener]) extends SimpleChannelUpstreamHandler {
+@Sharable
+class GntpChannelHandler(gntpClient: NioGntpClient, listener: Option[GntpListener]) extends SimpleChannelInboundHandler[GntpMessageResponse](true) { //SimpleChannelUpstreamHandler{//SimpleChannelInboundHandler[GntpMessageResponse] {
   private val logger: Logger = LoggerFactory.getLogger(classOf[GntpChannelHandler])
 
   @throws(classOf[Exception])
-  override def channelClosed(ctx: ChannelHandlerContext, e: ChannelStateEvent) {
-    logger.trace("Channel closed [{}]", e.getChannel)
+  override def handlerRemoved(ctx: ChannelHandlerContext) {
+    logger.trace("Channel closed [{}]", ctx.channel())
   }
 
   @throws(classOf[Exception])
-  override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent) {
-    val message: GntpMessageResponse = e.getMessage.asInstanceOf[GntpMessageResponse]
-    handleMessage(message)
+  override def channelRead0(ctx: ChannelHandlerContext, e: GntpMessageResponse) {
+    handleMessage(e)
   }
 
   @throws(classOf[Exception])
-  override def exceptionCaught(ctx: ChannelHandlerContext, e: ExceptionEvent) {
+  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+    //ctx.fireExceptionCaught(cause)
     try {
       if (gntpClient.isRegistered) {
-        handleIOError(e.getCause)
+        handleIOError(cause)
       }
       else {
-        e.getCause match {
+        cause match {
           case cause: ConnectException =>
             handleIOError(cause)
             gntpClient.retryRegistration
           case _: IOException =>
-            handleMessage(new GntpOkMessage(None, GntpMessageType.REGISTER, None)) //TODO check
-          case cause =>
-            handleIOError(cause)
+            handleMessage(new GntpOkMessage(None, GntpMessageType.REGISTER, null))// TODO Check
+          case theCause =>
+            handleIOError(theCause)
         }
       }
     } finally {
-      e.getChannel.close
+      ctx.channel.close
     }
   }
 
-  protected def handleMessage(message: GntpMessageResponse) {
+  private def handleMessage(message: GntpMessageResponse) {
     assert(message.isInstanceOf[GntpOkMessage] || message.isInstanceOf[GntpCallbackMessage] || message.isInstanceOf[GntpErrorMessage])
     logger.debug("handling message...")
     if (gntpClient.isRegistered) {
-      message.internalNotificationId.flatMap{gntpClient.notificationsSent.get}
+      message.internalNotificationId.flatMap{NioGntpClient.notificationsSent.get}
         .fold(logger.debug("notification is null. Not much we can do now..."))
       { notification: GntpNotification =>
         message match {
@@ -58,17 +60,14 @@ class GntpChannelHandler(gntpClient: NioGntpClient, listener: Option[GntpListene
             try {
               listener.foreach(_.onNotificationSuccess(notification))
             } finally {
-              notification.callbackTarget.foreach{ callback =>
-                message.internalNotificationId.foreach{
-                  gntpClient.notificationsSent.remove
-                }
+              notification.callbackTarget.foreach { callback =>
+                message.internalNotificationId.foreach{NioGntpClient.notificationsSent.remove}
               }
             }
           case callbackMessage: GntpCallbackMessage =>
             logger.debug("Callback - message.")
-            callbackMessage.internalNotificationId.foreach{
-              gntpClient.notificationsSent.remove
-            }
+            callbackMessage.internalNotificationId.foreach{NioGntpClient.notificationsSent.remove}
+
             listener.fold(throw new IllegalStateException("A GntpListener must be set in GntpClient to be able to receive callbacks")) { listener =>
               callbackMessage.callbackResult match {
                 case GntpCallbackResult.CLICK | GntpCallbackResult.CLICKED =>
@@ -111,7 +110,7 @@ class GntpChannelHandler(gntpClient: NioGntpClient, listener: Option[GntpListene
     }
   }
 
-  protected def handleIOError(t: Throwable) {
+  private def handleIOError(t: Throwable) {
     listener.fold(logger.error("Error in GNTP I/O operation", t))(_.onCommunicationError(t))
   }
 }

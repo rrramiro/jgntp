@@ -1,11 +1,10 @@
 package com.google.code.jgntp.internal.message
 
-import java.io.{OutputStreamWriter, OutputStream}
+import java.io.{ByteArrayOutputStream, OutputStreamWriter, OutputStream}
 
 import com.google.code.jgntp.internal.{GntpMessageHeader, GntpMessageType}
 import com.google.code.jgntp.{GntpApplicationInfo, GntpNotification, GntpPassword}
 import com.google.code.jgntp.internal.GntpMessageType._
-import org.jboss.netty.buffer.{ChannelBufferOutputStream, ChannelBuffers, ChannelBuffer}
 
 import scala.language.implicitConversions
 
@@ -47,8 +46,8 @@ abstract class GntpMessageRequest(val `type`: GntpMessageType,
 
 
   def writeHeaders(allHeaders: Seq[(String, HeaderObject)], output: OutputStream): Unit ={
-    val buffer: ChannelBuffer = ChannelBuffers.dynamicBuffer
-    val writerTmp = new OutputStreamWriter(new ChannelBufferOutputStream(buffer), GntpMessage.ENCODING)
+    val buffer = new ByteArrayOutputStream()
+    val writerTmp = new OutputStreamWriter(buffer, GntpMessage.ENCODING)
     allHeaders.foreach {
       case (_, HeaderSpacer) =>
         writerTmp.append(GntpMessage.SEPARATOR)
@@ -57,8 +56,7 @@ abstract class GntpMessageRequest(val `type`: GntpMessageType,
         writerTmp.append(GntpMessage.SEPARATOR)
     }
     writerTmp.flush()
-    val headerData: Array[Byte] = new Array[Byte](buffer.readableBytes)
-    buffer.getBytes(0, headerData)
+    val headerData: Array[Byte] = buffer.toByteArray
 
     output.flush()
     output.write(password.encrypt(headerData))

@@ -1,29 +1,34 @@
 package com.google.code.jgntp.internal.io
 
+import java.util
+
 import com.google.code.jgntp.internal.DumpDirectory
 import com.google.code.jgntp.internal.message._
 import com.google.code.jgntp.internal.message.read._
-import org.jboss.netty.buffer._
-import org.jboss.netty.channel.ChannelHandler._
-import org.jboss.netty.channel._
-import org.jboss.netty.handler.codec.oneone._
+import io.netty.buffer._
+import io.netty.channel.ChannelHandler._
+import io.netty.channel._
+import io.netty.handler.codec._
 import org.slf4j._
 
+
 @Sharable
-class GntpMessageDecoder extends OneToOneDecoder with DumpDirectory{
+class GntpMessageDecoder extends MessageToMessageDecoder[ByteBuf] with DumpDirectory {
   val logger: Logger = LoggerFactory.getLogger(classOf[GntpMessageDecoder])
   private final val parser: GntpMessageResponseParser = new GntpMessageResponseParser
 
   @throws(classOf[Exception])
-  protected def decode(ctx: ChannelHandlerContext, channel: Channel, msg: AnyRef): AnyRef = {
-    val buffer: ChannelBuffer = msg.asInstanceOf[ChannelBuffer]
+  override def decode(ctx: ChannelHandlerContext, msg: ByteBuf, out: util.List[AnyRef]): Unit = {
+    val buffer: ByteBuf = msg
     val b: Array[Byte] = new Array[Byte](buffer.readableBytes)
-    buffer.getBytes(0, b)
+//    buffer.getBytes(0, b)
+    buffer.readBytes(b)
     val s: String = new String(b, GntpMessage.ENCODING)
     if (logger.isDebugEnabled) {
       logger.debug("Message received\n{}", s)
     }
     dumpResponse(b)
-    parser.parse(s)
+    val response = parser.parse(s)
+    out.add(response)
   }
 }

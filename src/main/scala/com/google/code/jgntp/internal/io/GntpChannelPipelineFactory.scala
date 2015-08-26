@@ -1,27 +1,25 @@
 package com.google.code.jgntp.internal.io
 
-import org.jboss.netty.buffer._
-import org.jboss.netty.channel._
-import org.jboss.netty.handler.codec.frame._
+import io.netty.buffer.{ByteBuf, Unpooled}
+import io.netty.channel._
+import io.netty.channel.socket.SocketChannel
 
-class GntpChannelPipelineFactory(handler: ChannelHandler) extends ChannelPipelineFactory {
-//  private final val delimiterDecoder: ChannelHandler = new DelimiterBasedFrameDecoder(Integer.MAX_VALUE, getDelimiter)
-//  private final val delimiterEncoder: ChannelHandler = new DelimiterBasedFrameEncoder(getDelimiter)
-  private final val messageDecoder: ChannelHandler = new GntpMessageDecoder
-  private final val messageEncoder: ChannelHandler = new GntpMessageEncoder
 
-  @throws(classOf[Exception])
-  def getPipeline: ChannelPipeline = {
-    val pipeline: ChannelPipeline = Channels.pipeline
-//    pipeline.addLast("delimiter-decoder", delimiterDecoder)
-//    pipeline.addLast("delimiter-encoder", delimiterEncoder)
+object GntpChannelPipelineFactory{
+  def getDelimiter: ByteBuf = Unpooled.wrappedBuffer(Array[Byte]('\r'.toByte, '\n'.toByte, '\r'.toByte, '\n'.toByte))
+}
+
+class GntpChannelPipelineFactory(handler: GntpChannelHandler) extends ChannelInitializer[SocketChannel] {
+  //val delimiterDecoder = new DelimiterBasedFrameDecoder(Integer.MAX_VALUE, GntpChannelPipelineFactory.getDelimiter)
+  val messageDecoder = new GntpMessageDecoder
+  val messageEncoder = new GntpMessageEncoder
+
+  @Override
+  def initChannel(ch: SocketChannel): Unit = {
+    val pipeline = ch.pipeline()
+    //pipeline.addLast("delimiter-decoder", delimiterDecoder)
     pipeline.addLast("message-decoder", messageDecoder)
     pipeline.addLast("message-encoder", messageEncoder)
     pipeline.addLast("handler", handler)
-    pipeline
-  }
-
-  protected def getDelimiter: ChannelBuffer = {
-    ChannelBuffers.wrappedBuffer(Array[Byte]('\r'.toByte, '\n'.toByte, '\r'.toByte, '\n'.toByte))
   }
 }

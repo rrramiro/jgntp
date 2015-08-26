@@ -18,6 +18,7 @@ package com.google.code.jgntp
 import java.net._
 import java.util.concurrent._
 
+import com.google.code.jgntp.internal.io.NioTcpGntpClient
 import com.google.code.jgntp.internal.io._
 import org.slf4j.{Logger, LoggerFactory}
 

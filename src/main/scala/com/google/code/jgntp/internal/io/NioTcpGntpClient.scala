@@ -1,19 +1,22 @@
 package com.google.code.jgntp.internal.io
 
 import java.net._
-import java.util.concurrent.atomic.AtomicLong
-import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit, Executor}
-import scala.collection.concurrent.{TrieMap, Map}
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
+import java.util.concurrent.{Executor, Executors, ScheduledExecutorService, TimeUnit}
 
 import com.google.code.jgntp._
 import com.google.code.jgntp.internal.message._
-import org.jboss.netty.bootstrap._
-import org.jboss.netty.channel._
-import org.jboss.netty.channel.group._
-import org.jboss.netty.channel.socket.nio._
+import io.netty.bootstrap._
+import io.netty.buffer.UnpooledByteBufAllocator
+import io.netty.channel.{AdaptiveRecvByteBufAllocator, _}
+import io.netty.channel.group._
+import io.netty.channel.nio.NioEventLoopGroup
+import io.netty.channel.socket.nio.NioSocketChannel
+import io.netty.util.concurrent.GlobalEventExecutor
 import org.slf4j._
 
-import scala.collection.mutable
+import scala.collection.concurrent.TrieMap
+
 
 class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
                        growlHost: InetAddress,
@@ -24,37 +27,54 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
                        retryTime: Long = 0L,
                        retryTimeUnit: TimeUnit,
                        notificationRetryCount: Int = 0) extends NioGntpClient(applicationInfo, growlHost, growlPort, password) {
-  private val logger: Logger = LoggerFactory.getLogger(classOf[NioTcpGntpClient])
+  val logger: Logger = LoggerFactory.getLogger(classOf[NioTcpGntpClient])
   assert(executor != null, "Executor must not be null")
   if (retryTime > 0) {
     assert(retryTimeUnit != null, "Retry time unit must not be null")
   }
   assert(notificationRetryCount >= 0, "Notification retries must be equal or greater than zero")
 
-  private final val bootstrap: ClientBootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(executor, executor))
-  bootstrap.setPipelineFactory(new GntpChannelPipelineFactory(new GntpChannelHandler(this, Some(listener))))
-  bootstrap.setOption("tcpNoDelay", true)
-  bootstrap.setOption("remoteAddress", new InetSocketAddress(growlHost, growlPort))
-  bootstrap.setOption("soTimeout", 60 * 1000)
-  bootstrap.setOption("receiveBufferSizePredictor", new AdaptiveReceiveBufferSizePredictor)
-  private final val channelGroup: ChannelGroup = new DefaultChannelGroup("jgntp")
+  //private final val bootstrap: ClientBootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(executor, executor))
+  val group = new NioEventLoopGroup
+  private final val bootstrap: Bootstrap = new Bootstrap()
+
+  bootstrap.group(group)
+  bootstrap.remoteAddress(new InetSocketAddress(growlHost, growlPort))
+
+  bootstrap.option(ChannelOption.TCP_NODELAY, true.asInstanceOf[java.lang.Boolean])
+  bootstrap.option(ChannelOption.SO_TIMEOUT, Integer.valueOf(60 * 1000))
+  //bootstrap.option(ChannelOption.ALLOCATOR, new PooledByteBufAllocator(true))
+  bootstrap.option(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator.DEFAULT)
+  bootstrap.option(ChannelOption.RCVBUF_ALLOCATOR, AdaptiveRecvByteBufAllocator.DEFAULT)
+  bootstrap.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, DefaultMessageSizeEstimator.DEFAULT )
+  bootstrap.channel(classOf[NioSocketChannel])
+  //bootstrap.channel(classOf[NioServerSocketChannel])
+  bootstrap.handler(new GntpChannelPipelineFactory(new GntpChannelHandler(this, Option(listener))))
+  //bootstrap.setOption("tcpNoDelay", true)
+  //bootstrap.setOption("remoteAddress", growlAddress)
+  //bootstrap.setOption("soTimeout", 60 * 1000)
+  //bootstrap.setOption("receiveBufferSizePredictor", new AdaptiveReceiveBufferSizePredictor)
   private final val retryExecutorService: ScheduledExecutorService = if (retryTime > 0) Executors.newSingleThreadScheduledExecutor else null
+  private final val channelGroup: ChannelGroup = new DefaultChannelGroup("jgntp", GlobalEventExecutor.INSTANCE)
+
   @volatile
   private var tryingRegistration: Boolean = false
   private final val notificationIdGenerator: AtomicLong = new AtomicLong
-
-  val notificationRetries: Map[GntpNotification, Integer] = new TrieMap[GntpNotification, Integer]
+  val notificationRetries = new TrieMap[GntpNotification, AtomicInteger]
 
 
   protected def doRegister {
-    bootstrap.connect.addListener(new ChannelFutureListener {
+    bootstrap.connect(growlHost, growlPort).addListener(new ChannelFutureListener {
       @throws(classOf[Exception])
       def operationComplete(future: ChannelFuture) {
         tryingRegistration = false
         if (future.isSuccess) {
-          channelGroup.add(future.getChannel)
+          channelGroup.add(future.channel())
           val message: GntpMessage = new GntpRegisterMessage(applicationInfo, password)
-          future.getChannel.write(message)
+          future.channel().writeAndFlush(message)
+        } else {
+          future.cause().printStackTrace();
+          future.channel().close();
         }
       }
     })
@@ -65,27 +85,24 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
       @throws(classOf[Exception])
       def operationComplete(future: ChannelFuture) {
         if (future.isSuccess) {
-          channelGroup.add(future.getChannel)
+          channelGroup.add(future.channel)
           val notificationId: Long = notificationIdGenerator.getAndIncrement
-          notificationsSent.put(notificationId, notification)
+          NioGntpClient.notificationsSent.put(notificationId, notification)
           val message: GntpMessage = new GntpNotifyMessage(notification, notificationId, password)
-          future.getChannel.write(message)
+          future.channel.writeAndFlush(message)
         }
         else {
           if (retryExecutorService != null) {
-            var count: Integer = notificationRetries(notification)
+            var count = notificationRetries(notification)
             if (count == null) {
-              count = 1
+              count = new AtomicInteger(1)
+              notificationRetries.put(notification, count)
             }
-            if (count <= notificationRetryCount) {
+            if (count.get() <= notificationRetryCount) {
               logger.debug("Failed to send notification [{}], retry [{}/{}] in [{}-{}]", Array(notification, count, notificationRetryCount, retryTime, retryTimeUnit))
-              notificationRetries.put(notification, ({
-                count += 1; count
-              }))
+              count.incrementAndGet()
               retryExecutorService.schedule(new Runnable {
-                override def run {
-                  NioTcpGntpClient.this.notify(notification)
-                }
+                override def run(): Unit = NioTcpGntpClient.this.notify(notification)
               }, retryTime, retryTimeUnit)
             }
             else {
@@ -93,9 +110,11 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
               notificationRetries.remove(notification)
             }
           }
-          notificationsSent.find(_._2 == notification).foreach( entity =>
-            notificationsSent.remove(entity._1)
+          NioGntpClient.notificationsSent.find(_._2 == notification).foreach( entity =>
+            NioGntpClient.notificationsSent.remove(entity._1)
           )
+          future.cause().printStackTrace()
+          future.channel().close()
         }
       }
     })
@@ -108,7 +127,9 @@ class NioTcpGntpClient(applicationInfo: GntpApplicationInfo,
       retryExecutorService.awaitTermination(timeout, unit)
     }
     channelGroup.close.await(timeout, unit)
-    bootstrap.releaseExternalResources()
+    //bootstrap.releaseExternalResources()
+
+
   }
 
 

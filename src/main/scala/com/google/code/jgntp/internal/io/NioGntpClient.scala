@@ -18,7 +18,6 @@ abstract class NioGntpClient(val applicationInfo: GntpApplicationInfo, val growl
   if (password.encrypted) {
     assert(password.textPassword != null, "Password must not be null if sending encrypted messages") //TODO verify
   }
-  val notificationsSent = NioGntpClient.notificationsSent
   val registrationLatch: CountDownLatch = new CountDownLatch(1)
   @volatile
   var closed: Boolean = false

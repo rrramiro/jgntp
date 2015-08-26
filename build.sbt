@@ -25,7 +25,7 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.1.3",
   //"org.slf4j" % "slf4j-log4j12" % "1.6.1",
   //"com.google.guava" % "guava" % "10.0.1",
-  "org.jboss.netty" % "netty" % "3.2.6.Final",
+  //"org.jboss.netty" % "netty" % "3.2.6.Final",
   "commons-io" % "commons-io" % "2.4",
   //"io.reactivex" %% "rxscala" % "0.24.1",
   "junit" % "junit" % "4.12" % "test",
